@@ -1,0 +1,23 @@
+title: ME 684 — Design and Control of Dynamic Systems
+description: California State University, Northridge — ME 684 course page
+remote_theme: just-the-docs/just-the-docs
+
+# GitHub Pages site address (repo name: ME684-Control-Systems)
+url: https://aimlabvideo-collab.github.io
+baseurl: /ME684-Control-Systems
+
+# Enable the top search bar
+search_enabled: true
+
+# Top-right auxiliary link
+aux_links:
+  "GitHub":
+    - "https://github.com/aimlabvideo-collab/ME684-Control-Systems"
+
+aux_links_new_tab: true
+
+# Footer text
+footer_content: "ME 684 · California State University, Northridge · Maintained by the instructor."
+
+plugins:
+  - jekyll-remote-theme

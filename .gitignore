@@ -1,0 +1,35 @@
+# --- Protect private / sensitive material from being pushed ---
+# Best protection is simply NOT copying these files into this folder.
+# The patterns below are a safety net. They are intentionally SPECIFIC so they
+# don't catch legitimate words like "example", "upgrade", or "finalize".
+
+# Student records (FERPA) — folders
+Grade/
+Grades/
+
+# Copyrighted textbook
+Textbook/
+Text Book/
+Text Book.zip
+
+# Exam / quiz / solution materials (word-boundary patterns, not bare substrings)
+*answer-key*
+*answer_key*
+*[Ss]olution[s]?.*
+*-[Ss]olution*
+*_[Ss]olution*
+ME684_*Exam*
+*Midterm*
+*Final-Exam*
+*[Qq]uiz-*
+
+# Python / local environment
+.venv/
+__pycache__/
+*.pyc
+
+# OS / editor junk
+.DS_Store
+__MACOSX/
+Thumbs.db
+*.asv
