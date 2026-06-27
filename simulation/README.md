@@ -13,8 +13,8 @@ Each folder has its own README with details and how to run it.
 Download individual files from GitHub, or clone the whole course repo:
 
 ```bash
-git clone https://github.com/aimlabvideo-collab/ME684-Control-Systems.git
-cd ME684-Control-Systems/simulation
+git clone https://github.com/aimlabvideo-collab/ME684_Design-and-Control-of-Dynamic-Systems.git
+cd ME684_Design-and-Control-of-Dynamic-Systems/simulation
 ```
 
 MATLAB examples use the Control System Toolbox. Python examples use

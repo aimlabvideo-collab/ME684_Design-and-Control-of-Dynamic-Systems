@@ -2,7 +2,7 @@
 
 Course website for ME 684 at California State University, Northridge.
 
-**Live site:** https://aimlabvideo-collab.github.io/ME684-Control-Systems/
+**Live site:** https://aimlabvideo-collab.github.io/ME684_Design-and-Control-of-Dynamic-Systems/
 
 This repository is published with GitHub Pages (Jekyll + the `just-the-docs` theme).
 
