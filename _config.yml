@@ -21,3 +21,9 @@ footer_content: "ME 684 · California State University, Northridge · Maintained
 
 plugins:
   - jekyll-remote-theme
+
+# Let MathJax (loaded in _includes/head_custom.html) render all math itself.
+# Without this, kramdown wraps $$...$$ in <script type="math/tex"> tags that
+# MathJax 3 does not scan, so display equations would silently fail to render.
+kramdown:
+  math_engine: null
