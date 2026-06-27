@@ -13,13 +13,13 @@ nav_order: 8
 
 ## Key Topics
 ### 8.1 State-Space Representation
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 8.2 Controllability & Observability
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 8.3 Eigenvalues & Stability
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 
 ## Course Materials

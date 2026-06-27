@@ -13,13 +13,13 @@ nav_order: 4
 
 ## Key Topics
 ### 4.1 First-Order Systems
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 4.2 Second-Order Systems
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 4.3 Steady-State Error & Performance Specs
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 
 ## Course Materials

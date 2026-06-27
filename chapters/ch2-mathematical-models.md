@@ -8,11 +8,13 @@ nav_order: 2
 
 {: .no_toc }
 
-A control system can only be analyzed and designed once we have a **mathematical
-model** of the plant. This chapter builds that model in four stages: write the
-governing **differential equations** from physical laws, **linearize** them when
-they are nonlinear, transform them with the **Laplace transform** into algebraic
-**transfer functions**, and finally organize everything as a **block diagram**.
+Control design begins with a **mathematical model** of the plant. This chapter
+develops the theory behind that model: how physical laws become **differential
+equations**, why and when we may **linearize** a nonlinear model, how the
+**Laplace transform** turns calculus into algebra, what a **transfer function**
+really represents, and how **pole locations** govern stability. The worked
+numerical examples live in the lecture slides; here we focus on *why* each tool
+works and *when* it is valid.
 
 <details open markdown="block">
   <summary>Contents</summary>
@@ -27,592 +29,520 @@ they are nonlinear, transform them with the **Laplace transform** into algebraic
 
 By the end of this chapter you should be able to:
 
-- **Model** mechanical, electrical, and electromechanical systems with
-  differential equations derived from physical laws.
-- Distinguish **linear** from **nonlinear** systems using superposition and
-  homogeneity, and **linearize** a nonlinear model with a Taylor-series
-  expansion about an operating point.
-- Apply the **Laplace transform** (and its inverse) to turn differential
-  equations into algebraic equations, and state the conditions under which the
-  transform exists.
-- Define the **transfer function**, locate its **poles and zeros**, and use
-  their position in the **s-plane** to judge **stability**.
-- Reduce a **block diagram** of interconnected subsystems to a single
-  equivalent transfer function.
+- Explain what a mathematical model is, the assumptions behind it, and the
+  trade-off between **fidelity and simplicity**.
+- State the defining properties of a **linear, time-invariant (LTI)** system and
+  explain why linearity is so powerful.
+- Justify **linearization** as a Taylor-series approximation about an
+  equilibrium point and describe its **region of validity**.
+- Define the **Laplace transform**, its **region of convergence**, and the
+  conditions guaranteeing its existence, and interpret its key properties.
+- Define the **transfer function**, relate it to the **impulse response**, and
+  use **poles and zeros** to reason about **stability** and natural behavior.
+- Interpret a **block diagram** as an algebra of interconnected transfer
+  functions and derive the closed-loop feedback relation.
 
 ---
 
-## 2.1 Why Do We Need a System Model?
+## 2.1 What a Mathematical Model Is — and Is Not
 
-A **system model** is a mathematical representation of a physical system that
-predicts how it behaves under different conditions. A good model lets us:
+A **mathematical model** is a set of equations that relate a system's **inputs**
+to its **outputs** closely enough to be useful for a particular purpose. The
+phrase *for a particular purpose* is essential: a model is not "the truth" about
+a system but a **deliberate approximation** chosen to answer a specific question.
 
-- **Predict** the response before building anything,
-- **Design and analyze** controllers systematically,
-- **Optimize** performance, and
-- **Test** scenarios (faults, extreme inputs) safely and cheaply.
+Why we build models at all:
 
-At its heart, a model is an **input–output relationship**: given the input we
-command (a force, a voltage), the model tells us the output we will get (a
-position, a speed). Everything in this course is built on top of that
-relationship.
+- **Prediction** — anticipate behavior before hardware exists.
+- **Analysis** — reason about stability, speed, and accuracy systematically.
+- **Design** — synthesize controllers that meet specifications.
+- **Insight** — expose *which* physical parameters actually drive behavior.
 
-> **A modern aside — physics-informed models.** Purely data-driven models
-> (neural networks) learn patterns from data alone; they need large datasets and
-> can violate physical laws. *Physics-informed* approaches embed the governing
-> equations — exactly the kind we derive in this chapter — into the learning
-> process, improving generalization and cutting the data required. The physical
-> model is not obsolete in the age of machine learning; it is what makes those
-> models trustworthy.
+### The fidelity–simplicity trade-off
 
-### The modeling procedure
+Every model sits on a spectrum between two failure modes. Too **simple**, and it
+omits dynamics that matter (the controller works on paper but not in hardware).
+Too **complex**, and it becomes analytically intractable and obscures the
+dominant effects. Good modeling is the art of keeping the **smallest set of
+dynamics that still captures the behavior of interest**.
 
-A reliable rule of thumb for deriving a model:
+### Standing assumptions in this course
 
-1. **Define** the system boundary, its variables (inputs/outputs), and its
-   constants (masses, stiffnesses, resistances).
-2. **Apply the physical laws** that govern it (Newton's laws, Kirchhoff's laws,
-   conservation principles) to obtain the **differential equation(s)**.
-3. **Linearize** about an operating point if the equations are nonlinear.
-4. **Laplace-transform** (assuming zero initial conditions) to get the
-   **transfer function**.
-5. **Represent** the result as a **block diagram** and reduce as needed.
+To stay in the realm of classical control we will almost always assume the model
+is:
 
----
+- **Lumped-parameter** — described by a finite number of states (ordinary, not
+  partial, differential equations). Mass, stiffness, and damping are treated as
+  concentrated elements rather than spatially distributed fields.
+- **Linear** — superposition holds (Section 2.3); when it does not, we
+  *linearize* (Section 2.4).
+- **Time-invariant** — the parameters do not change with time, so the system's
+  response to an input does not depend on *when* the input is applied.
+- **Causal** — the output depends only on present and past inputs.
 
-## 2.2 Differential-Equation Modeling
+These four assumptions are exactly what make the Laplace-domain, transfer-function
+machinery of the rest of the course apply.
 
-### Example 1 — Mass–spring–damper system
+### From physical laws to equations
 
-Consider a mass $M$ on a frictionless track, tied to a wall by a spring of
-stiffness $k$ and a damper (viscous friction) of coefficient $b$, driven by an
-applied force $r(t)$. Let $y(t)$ be the displacement from equilibrium.
+Modeling is systematic, not ad hoc. The recipe is always the same:
 
-**Step 1 — variables and constants.**
-
-| Symbol | Meaning |
-|--------|---------|
-| $M$ | mass of the object |
-| $k$ | spring constant |
-| $b$ | viscous-friction (damping) coefficient |
-| $r(t)$ | applied force (input) |
-| $y(t)$ | displacement (output) |
-
-**Step 2 — free-body diagram and Newton's second law.** Summing forces on the
-mass ($\sum F = M\ddot y$):
-
-$$
-\underbrace{r(t)}_{\text{applied}}
--\underbrace{b\,\dot y(t)}_{\text{damping}}
--\underbrace{k\,y(t)}_{\text{stiffness}}
-= \underbrace{M\,\ddot y(t)}_{\text{inertia}}
-$$
-
-Rearranging gives the **governing differential equation**:
-
-$$
-M\,\ddot y(t) + b\,\dot y(t) + k\,y(t) = r(t).
-$$
-
-This single second-order, **linear, constant-coefficient** equation is the
-prototype for almost every system in this course. We will return to it
-repeatedly — its transfer function (Section 2.6) is
-
-$$
-G(s) = \frac{Y(s)}{R(s)} = \frac{1}{Ms^2 + bs + k}.
-$$
-
-### Example 2 — One-DOF robot arm (a *nonlinear* model)
-
-Now a single rigid link of mass $m$ and length $l$, with moment of inertia $J$
-about its pivot, driven by an actuator torque $\tau(t)$, rotating by angle
-$\theta(t)$ against gravity:
-
-$$
-J\,\ddot\theta(t) + m g l\,\sin\theta(t) = \tau(t).
-$$
-
-**Why is this harder?** The $\sin\theta$ term makes the equation **nonlinear** —
-there is no general closed-form solution, and the powerful linear tools
-(superposition, Laplace transforms) do **not** apply directly. To use linear
-control methods we must first **linearize** it (Section 2.4).
+1. **Define** the system boundary, the input/output variables, and the constant
+   parameters.
+2. **Apply the governing physical laws** — Newton's laws (mechanical),
+   Kirchhoff's laws (electrical), conservation of energy/momentum — to each
+   element.
+3. **Combine** the element equations into a governing **differential equation**
+   (or a set of them).
+4. **Linearize** about an operating point if any term is nonlinear.
+5. **Transform** to the Laplace domain to obtain the **transfer function**, and
+   organize the result as a **block diagram**.
 
 ---
 
-## 2.3 Linearity and Nonlinearity
+## 2.2 Differential-Equation Models
 
-A system (operator) $L$ is **linear** if it satisfies both:
+### Element laws and the standard LTI form
 
-1. **Superposition (additivity).** If input $x_1 \mapsto y_1$ and
-   $x_2 \mapsto y_2$, then $x_1 + x_2 \mapsto y_1 + y_2$.
-2. **Homogeneity (scaling).** If $x \mapsto y$, then $\alpha x \mapsto \alpha y$
-   for any scalar $\alpha$.
+Physical modeling rests on a small library of **element laws** relating effort
+and flow variables. In translational mechanics, for example, the three passive
+elements contribute forces:
 
-The two combine into the single test
-$L(\alpha x_1 + \beta x_2) = \alpha L(x_1) + \beta L(x_2)$. Graphically, a linear
-static map is a **straight line through the origin** — note the "through the
-origin" part: $y = mx + c$ with $c \neq 0$ is **affine**, not linear, because it
-fails homogeneity.
+$$
+\text{inertia: } F = M\ddot y, \qquad
+\text{damping: } F = b\dot y, \qquad
+\text{stiffness: } F = k y.
+$$
 
-> Most real systems are nonlinear, but a great many behave **approximately
-> linearly within a limited operating range** — which is exactly what makes
-> linearization (next section) so useful.
+Summing them through Newton's second law produces a linear, constant-coefficient
+ordinary differential equation. The **mass–spring–damper** is the canonical
+second-order example,
 
-### Worked test
+$$
+M\,\ddot y(t) + b\,\dot y(t) + k\,y(t) = r(t),
+$$
 
-> **Is the operator $L(x) = 2\ddot x - 5x$ linear?**
->
-> *Homogeneity:* $L(\alpha x) = 2(\alpha\ddot x) - 5(\alpha x)
-> = \alpha(2\ddot x - 5x) = \alpha L(x).$ ✓
->
-> *Additivity:* $L(x_1 + x_2) = (2\ddot x_1 - 5x_1) + (2\ddot x_2 - 5x_2)
-> = L(x_1) + L(x_2).$ ✓
->
-> Both hold and there is no constant or product/transcendental term, so the
-> system is **linear**.
+and it is worth memorizing as a *structural template*: an **inertia** term
+(highest derivative), a **dissipation** term (first derivative), a **restoring**
+term (zeroth derivative), and a **forcing** input on the right. An enormous range
+of electrical, thermal, and electromechanical systems reduces to exactly this
+form, which is why second-order intuition carries so far in control.
 
-Quick heuristic for spotting nonlinearity: look for products of variables
-($x\dot x$), powers ($x^2$), transcendental functions ($\sin x$, $e^x$), or a
-**constant offset** term.
+In general, an $$n$$th-order LTI system is written
+
+$$
+a_n y^{(n)} + a_{n-1} y^{(n-1)} + \cdots + a_1 \dot y + a_0 y
+= b_m r^{(m)} + \cdots + b_1 \dot r + b_0 r,
+$$
+
+with constant coefficients $$a_i, b_j$$. The **order** $$n$$ equals the number of
+independent energy-storage elements (masses, springs, capacitors, inductors) and
+fixes the number of initial conditions the system needs.
+
+### Why some models are nonlinear
+
+The LTI template breaks whenever an element law is not proportional. The
+archetype is a rotating link under gravity (a one-DOF arm or pendulum),
+
+$$
+J\,\ddot\theta(t) + m g l\,\sin\theta(t) = \tau(t),
+$$
+
+where the **gravitational restoring torque is proportional to $$\sin\theta$$, not
+to $$\theta$$**. That single transcendental term forbids a closed-form solution
+and disqualifies the Laplace/transfer-function tools — which assume linearity.
+Rather than abandon those tools, we **approximate** the model by a linear one
+that is accurate near the operating point. That is the subject of Section 2.4.
 
 ---
 
-## 2.4 Linearization via Taylor Series
+## 2.3 Linearity, Time-Invariance, and Why They Matter
 
-### Single-variable case
+### The definition
 
-Near an operating point $x_0$, expand a nonlinear function $f(x)$ in a Taylor
-series:
+An operator (system) $$L$$ mapping inputs to outputs is **linear** if it satisfies
+two properties:
+
+- **Additivity (superposition):** if $$x_1 \mapsto y_1$$ and $$x_2 \mapsto y_2$$,
+  then $$x_1 + x_2 \mapsto y_1 + y_2$$.
+- **Homogeneity (scaling):** if $$x \mapsto y$$, then $$\alpha x \mapsto \alpha y$$
+  for every scalar $$\alpha$$.
+
+The two collapse into a single statement,
+
+$$
+L(\alpha x_1 + \beta x_2) = \alpha\,L(x_1) + \beta\,L(x_2),
+$$
+
+which says the system "distributes over" weighted sums of inputs.
+
+### Linear vs. affine — a subtle but important distinction
+
+A static map is linear only if its graph is a **straight line through the
+origin**. The relation $$y = mx + c$$ with $$c \neq 0$$ is **affine**, not linear:
+it fails homogeneity because $$L(0) = c \neq 0$$. This matters in practice because
+a constant bias (gravity preload, sensor offset, a nonzero operating point) makes
+a system affine — and we recover linearity by measuring all variables as
+**deviations from the operating point**, which is precisely what linearization
+does.
+
+### Why linearity is the prize
+
+Superposition is not a convenience; it is the foundation of nearly every analysis
+method in this course:
+
+- We may decompose a complicated input into simple pieces (impulses, steps,
+  sinusoids), find the response to each, and **add** the results.
+- The response to a sinusoid is a sinusoid of the **same frequency** — the basis
+  of frequency-response (Bode/Nyquist) methods in Chapter 7.
+- The Laplace transform and transfer functions exist **only** for linear systems.
+
+### Time-invariance
+
+A system is **time-invariant** if delaying the input merely delays the output by
+the same amount: $$x(t) \mapsto y(t)$$ implies $$x(t - T) \mapsto y(t - T)$$.
+Combined with linearity, this is what allows a system to be represented by a
+single, fixed transfer function (Section 2.6) rather than a relationship that
+changes from moment to moment.
+
+### Recognizing nonlinearity at a glance
+
+A model is nonlinear if it contains any of: products of variables ($$x\dot x$$),
+powers ($$x^2$$), transcendental functions ($$\sin x$$, $$e^x$$), or
+discontinuities (saturation, friction, backlash, hysteresis). Most real systems
+contain several — yet most behave **approximately linearly within a limited
+operating range**, which is what makes the next section so useful.
+
+---
+
+## 2.4 Linearization
+
+### The idea: a tangent approximation about an equilibrium
+
+Linearization replaces a nonlinear function by its **tangent** at an operating
+point and studies only **small deviations** from that point. The operating point
+is usually an **equilibrium** (or *trim*) condition — a state at which the system
+can rest with constant input, so the derivatives vanish. We then ask how the
+system responds to small perturbations *about* that equilibrium, which is exactly
+the regime in which a controller holding a setpoint operates.
+
+### Single-variable theory
+
+Expand a nonlinear function $$f(x)$$ in a Taylor series about $$x_0$$:
 
 $$
 f(x) = f(x_0) + \left.\frac{df}{dx}\right|_{x_0}(x - x_0)
      + \frac{1}{2!}\left.\frac{d^2 f}{dx^2}\right|_{x_0}(x - x_0)^2 + \cdots
 $$
 
-**First-order linearization** keeps only the first two terms (the tangent line),
-discarding the higher-order terms $(n \ge 2)$:
+For **small** deviations $$x - x_0$$, the quadratic and higher terms shrink far
+faster than the linear term, so we keep only the first two:
 
 $$
 f(x) \approx f(x_0) + \left.\frac{df}{dx}\right|_{x_0}(x - x_0).
 $$
 
-This is accurate **only near $x_0$** — we trade some accuracy for an enormous
-gain in mathematical tractability. The further the system swings from the
-operating point, the worse the approximation.
+The slope $$\left.\tfrac{df}{dx}\right|_{x_0}$$ is a **constant gain**; the model
+has become linear in the deviation variable $$\Delta x = x - x_0$$. The classic
+illustration is the small-angle approximation $$\sin\theta \approx \theta$$, which
+turns the pendulum equation into a linear oscillator — *valid only while
+$$\theta$$ stays small*.
 
-### Multivariable case
+### Multivariable theory and the Jacobian
 
-For $f(x_1, x_2, \dots, x_n)$ about an operating point
-$\mathbf{x}_0 = (x_{1,0}, \dots, x_{n,0})$:
-
-$$
-f(\mathbf{x}) \approx f(\mathbf{x}_0)
-   + \sum_{i=1}^{n}\left.\frac{\partial f}{\partial x_i}\right|_{\mathbf{x}_0}
-     (x_i - x_{i,0}).
-$$
-
-For a state-space model $\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$
-linearized about $(\mathbf{x}_0, \mathbf{u}_0)$, this produces the Jacobian
-matrices we will use in Chapter 8:
+For a state model $$\dot{\mathbf{x}} = f(\mathbf{x}, \mathbf{u})$$ linearized about
+an equilibrium $$(\mathbf{x}_0, \mathbf{u}_0)$$, the same first-order expansion in
+several variables gives
 
 $$
 \Delta\dot{\mathbf{x}} \approx
-\underbrace{\left.\frac{\partial f}{\partial \mathbf{x}}\right|_0}_{A}\,
+\underbrace{\left.\frac{\partial f}{\partial \mathbf{x}}\right|_0}_{A}
 \Delta\mathbf{x}
 +
-\underbrace{\left.\frac{\partial f}{\partial \mathbf{u}}\right|_0}_{B}\,
+\underbrace{\left.\frac{\partial f}{\partial \mathbf{u}}\right|_0}_{B}
 \Delta\mathbf{u}.
 $$
 
-### Example — pendulum (small-angle linearization)
+The partial-derivative matrices $$A$$ and $$B$$ are **Jacobians** evaluated at the
+operating point. This is precisely the state-space model we will design with in
+Chapter 8 — linearization is the bridge from a nonlinear plant to linear
+state-feedback design.
 
-Take the undriven arm/pendulum $J\ddot\theta + mgl\sin\theta = 0$.
+### What we gain, and what we give up
 
-**Step 1 — expand $\sin\theta$ about $\theta = 0$:**
-
-$$
-\sin\theta = \theta - \frac{\theta^3}{3!} + \frac{\theta^5}{5!} - \cdots
-\;\approx\; \theta \quad (\text{small } \theta).
-$$
-
-**Step 2 — substitute $\sin\theta \approx \theta$:**
-
-$$
-J\,\ddot\theta + m g l\,\theta = 0
-\qquad\Longrightarrow\qquad
-\ddot\theta + \frac{m g l}{J}\,\theta = 0,
-\qquad
-\omega_n = \sqrt{\frac{m g l}{J}}.
-$$
-
-The linearized model is a simple harmonic oscillator with natural frequency
-$\omega_n$ — but it is **valid only for small angles** where $\sin\theta\approx\theta$.
-
-> **Why only odd powers appear in $\sin\theta$.** Differentiating $\sin\theta$
-> cycles through $\sin, \cos, -\sin, -\cos,\dots$. Evaluated at $\theta = 0$, the
-> **even-order** derivatives are $\pm\sin 0 = 0$ (they vanish), while the
-> **odd-order** derivatives are $\pm\cos 0 = \pm 1$ (they survive). Equivalently,
-> $\sin\theta$ is an **odd function** ($\sin(-\theta) = -\sin\theta$), and the
-> series of an odd function contains only odd powers. The first-order term
-> $\theta$ is therefore the leading nonzero term — which is why small-angle
-> linearization is so clean.
+Linearization is a **trade**: we exchange global accuracy for a model we can
+actually analyze with linear tools. The approximation is trustworthy only in a
+neighborhood of the operating point and degrades as the system swings away from
+it. A system linearized about one equilibrium may behave very differently about
+another (a pendulum is stable hanging down, unstable balanced up) — the *same*
+nonlinear plant yields *different* linear models at different operating points.
 
 ---
 
 ## 2.5 The Laplace Transform
 
-### Motivation
+### Why transform at all
 
-Solving linear differential equations directly in the time domain is tedious.
-The Laplace transform converts them into **algebraic** equations in a complex
-variable $s$, where differentiation and integration become multiplication and
-division:
+Solving linear differential equations directly in the time domain means
+repeatedly integrating. The Laplace transform converts the **calculus** of LTI
+systems into **algebra**: differentiation becomes multiplication by $$s$$, and
+integration becomes division by $$s$$,
 
 $$
-\frac{d}{dt} \;\longleftrightarrow\; s,\qquad
-\frac{d^2}{dt^2}\;\longleftrightarrow\; s^2,\qquad
+\frac{d}{dt} \;\longleftrightarrow\; s, \qquad
 \int_0^t (\cdot)\,d\tau \;\longleftrightarrow\; \frac{1}{s}.
 $$
 
-### Definition
+A differential equation becomes a polynomial equation that we solve by ordinary
+algebra, then transform back. The whole transfer-function method depends on this.
 
-For a function $f(t)$ defined for $t \ge 0$, the (one-sided) Laplace transform is
+### Definition and region of convergence
+
+For a signal $$f(t)$$ defined for $$t \ge 0$$, the (one-sided) Laplace transform is
 
 $$
 F(s) = \mathcal{L}\{f(t)\} = \int_0^{\infty} f(t)\,e^{-st}\,dt,
 \qquad s = \sigma + j\omega \in \mathbb{C}.
 $$
 
-It maps the **time domain** $t$ to the **complex-frequency domain** $s$.
+It maps a function of **time** $$t$$ to a function of the **complex frequency**
+$$s$$. The integral converges only for $$s$$ in a right half-plane
+$$\mathrm{Re}(s) > \alpha$$ called the **region of convergence**; the factor
+$$e^{-\sigma t}$$ is what tames the growth of $$f(t)$$ and makes the improper
+integral finite. We use the **one-sided** transform (lower limit $$0$$) because
+control problems have a definite "switch-on" instant and because it cleanly
+encodes **initial conditions**.
 
-### When does it exist? (sufficient conditions)
+### When does the transform exist?
 
-The integral converges — and $F(s)$ exists for $\mathrm{Re}(s) > \alpha$ — when:
+Two **sufficient** conditions guarantee existence:
 
-1. **$f(t)$ is piecewise continuous** on every finite interval of $[0,\infty)$:
-   continuous except at a *finite* number of points, where it may have
-   **jump discontinuities** with finite left- and right-hand limits (no infinite
-   values or vertical asymptotes).
-2. **$f(t)$ is of exponential order:** there exist constants $M > 0$, $\alpha$,
-   and $T \ge 0$ with $|f(t)| \le M e^{\alpha t}$ for all $t \ge T$. This caps
-   the growth rate so the $e^{-st}$ factor can force convergence.
+1. **Piecewise continuity** — on every finite interval of $$[0,\infty)$$, $$f$$ is
+   continuous except at finitely many points, where it may *jump* but the
+   one-sided limits stay finite (no vertical asymptotes).
+2. **Exponential order** — the signal grows no faster than some exponential:
+   there are constants $$M > 0$$, $$\alpha$$, $$T \ge 0$$ with
+   $$|f(t)| \le M e^{\alpha t}$$ for all $$t \ge T$$. This caps the growth so that,
+   for $$\mathrm{Re}(s) > \alpha$$, the decaying $$e^{-st}$$ wins and the integral
+   converges.
 
-These are **sufficient, not necessary** — e.g. $f(t) = t^{-1/2}$ is *not*
-piecewise continuous at $0$, yet its transform exists.
+These are **sufficient, not necessary** — some functions violate them yet still
+have transforms. Conceptually: polynomials, exponentials, and sinusoids are all
+of exponential order (and transformable), whereas violently growing functions
+such as $$e^{t^2}$$ are **not** of exponential order and have no Laplace transform.
 
-| Of exponential order ✓ | **Not** of exponential order ✗ |
-|---|---|
-| polynomials $t^n$, constants $k$ | $e^{t^2}$ |
-| exponentials $e^{at}$ | $e^{e^{t}}$ (double exponential) |
-| sinusoids $\sin\omega t$, $\cos\omega t$ | |
+### The properties that do the work
 
-### Worked example — transform from the definition
+The power of the method is in a handful of properties:
 
-Find $\mathcal{L}\{e^{-at}\}$:
+| Property | Time domain | $$s$$-domain | Meaning |
+|---|---|---|---|
+| Linearity | $$a f + b g$$ | $$aF + bG$$ | mirrors system linearity |
+| Differentiation | $$\dot f$$ | $$sF(s) - f(0)$$ | derivative → multiply by $$s$$; **carries the initial condition** |
+| Second derivative | $$\ddot f$$ | $$s^2F(s) - s f(0) - \dot f(0)$$ | initial position *and* velocity appear |
+| Integration | $$\int_0^t f\,d\tau$$ | $$F(s)/s$$ | accumulation → divide by $$s$$ |
+| Time delay | $$f(t-T)u(t-T)$$ | $$e^{-Ts}F(s)$$ | a pure delay is the factor $$e^{-Ts}$$ |
+| Final value | $$\lim_{t\to\infty} f(t)$$ | $$\lim_{s\to 0} sF(s)$$ | steady state without inverting* |
+| Initial value | $$\lim_{t\to 0^+} f(t)$$ | $$\lim_{s\to\infty} sF(s)$$ | the jump at $$t=0^+$$ |
 
-$$
-F(s) = \int_0^\infty e^{-at}e^{-st}\,dt
-     = \int_0^\infty e^{-(s+a)t}\,dt
-     = \left[\frac{-1}{s+a}e^{-(s+a)t}\right]_0^\infty
-     = \frac{1}{s+a},
-$$
+*The **final-value theorem** is valid only when $$sF(s)$$ has all its poles in the
+open left half-plane; otherwise the time limit does not exist and the formula is
+meaningless. This caveat is itself a stability statement — a preview of
+Section 2.7.
 
-valid for $\mathrm{Re}(s) > -a$.
-
-### Key properties
-
-| Property | Time domain | $s$-domain |
-|---|---|---|
-| Linearity | $a f(t) + b g(t)$ | $aF(s) + bG(s)$ |
-| First derivative | $\dot f(t)$ | $sF(s) - f(0)$ |
-| Second derivative | $\ddot f(t)$ | $s^2F(s) - s f(0) - \dot f(0)$ |
-| Integration | $\int_0^t f(\tau)\,d\tau$ | $F(s)/s$ |
-| Time shift | $f(t-T)\,u(t-T)$ | $e^{-Ts}F(s)$ |
-| Frequency shift | $e^{-at}f(t)$ | $F(s+a)$ |
-
-Note how the **initial conditions** $f(0), \dot f(0)$ enter through the
-derivative rules. When we assume **zero initial conditions** (the standard
-assumption for transfer functions), $\dot f \to sF(s)$ and $\ddot f \to s^2F(s)$
-exactly.
-
-### A short transform table
-
-| $f(t),\ t\ge 0$ | $F(s)$ |
-|---|---|
-| $\delta(t)$ (unit impulse) | $1$ |
-| $u(t)$ (unit step) | $1/s$ |
-| $t$ | $1/s^2$ |
-| $t^n$ | $n!/s^{n+1}$ |
-| $e^{-at}$ | $1/(s+a)$ |
-| $\sin\omega t$ | $\omega/(s^2+\omega^2)$ |
-| $\cos\omega t$ | $s/(s^2+\omega^2)$ |
-| $e^{-at}\sin\omega t$ | $\omega/\big((s+a)^2+\omega^2\big)$ |
-| $e^{-at}\cos\omega t$ | $(s+a)/\big((s+a)^2+\omega^2\big)$ |
-
-### Transforming a differential equation
-
-Apply the transform term-by-term to the mass–spring–damper equation (zero
-initial conditions):
-
-$$
-M\,\ddot y + b\,\dot y + k\,y = r(t)
-\;\;\xrightarrow{\;\mathcal{L}\;}\;\;
-(Ms^2 + bs + k)\,Y(s) = R(s).
-$$
-
-The differential equation has become an **algebraic** one — and we can already
-read off the transfer function.
+Notice how the differentiation property threads the **initial conditions**
+$$f(0), \dot f(0)$$ into the algebra. Transfer functions adopt the convention of
+**zero initial conditions**, under which $$\dot f \to sF(s)$$ and
+$$\ddot f \to s^2 F(s)$$ exactly — turning a differential equation into a clean
+multiplication.
 
 ---
 
-## 2.6 Transfer Functions, Poles, Zeros, and Stability
+## 2.6 Transfer Functions, Poles, and Zeros
 
-### The transfer function
+### Definition and meaning
 
-The **transfer function** $G(s)$ is the ratio of the Laplace transform of the
-output to that of the input, **assuming zero initial conditions**:
+The **transfer function** is the Laplace transform of the output divided by that
+of the input, assuming zero initial conditions:
 
 $$
 G(s) = \frac{Y(s)}{R(s)} = \frac{p(s)}{q(s)}
      = \frac{b_m s^m + \cdots + b_1 s + b_0}{a_n s^n + \cdots + a_1 s + a_0}.
 $$
 
-For the mass–spring–damper system, $G(s) = \dfrac{1}{Ms^2 + bs + k}$.
+It is an **intrinsic property of the system**, independent of the particular
+input: the same $$G(s)$$ predicts the response to a step, a ramp, or a sinusoid.
+For the canonical second-order system, $$G(s) = 1/(Ms^2 + bs + k)$$.
+
+### The transfer function *is* the impulse response
+
+There is a deep reason transfer functions are so central. If the input is a unit
+impulse $$r(t) = \delta(t)$$, then $$R(s) = 1$$ and $$Y(s) = G(s)$$ — so $$G(s)$$ is
+the **Laplace transform of the impulse response** $$g(t)$$. Equivalently, in the
+time domain the output is the **convolution** $$y(t) = g(t) * r(t)$$, and the
+Laplace transform turns that convolution into the simple product
+$$Y(s) = G(s)R(s)$$. The transfer function packages everything the LTI system can
+ever do into a single function of $$s$$.
+
+### Properness
+
+A transfer function is **proper** when $$m \le n$$ (numerator degree no greater
+than denominator) and **strictly proper** when $$m < n$$. Physical systems are
+proper — a strictly proper system cannot respond instantaneously to an input,
+reflecting that real plants have inertia. An improper $$G(s)$$ would imply pure
+differentiation of the input, which amplifies noise without bound and is not
+physically realizable on its own.
 
 ### Poles and zeros
 
-- **Zeros** — roots of the numerator $p(s) = 0$. The output is driven to zero at
-  these complex frequencies; they shape the *transient* response.
-- **Poles** — roots of the denominator $q(s) = 0$. They determine the system's
-  **natural (unforced) response** and are decisive for **stability**.
+- **Zeros** are the roots of the numerator $$p(s) = 0$$. At these complex
+  frequencies the transfer function is zero, so a zero **blocks** transmission and
+  shapes the *transient* response (it can cause overshoot or undershoot).
+- **Poles** are the roots of the denominator $$q(s) = 0$$. They are the system's
+  **natural frequencies** — the values of $$s$$ for which the system can sustain a
+  response with no input. They dominate the character of the response and decide
+  stability.
 
-The denominator $q(s) = 0$ is the **characteristic equation** of the system.
+The denominator equation $$q(s) = 0$$ is the **characteristic equation**; its
+roots (the poles) are the **modes** of the system. A pole at $$s = p$$ contributes
+a term proportional to $$e^{pt}$$ to the natural response, so the geometry of the
+poles in the complex plane *is* the time behavior.
 
-### Stability and the s-plane
+---
 
-> A system is **(BIBO) stable** if every **b**ounded **i**nput produces a
-> **b**ounded **o**utput.
+## 2.7 Stability and the s-Plane
 
-For a linear time-invariant system this reduces to a beautifully simple
-geometric test:
+### BIBO stability
+
+> A system is **bounded-input bounded-output (BIBO) stable** if **every** bounded
+> input produces a bounded output.
+
+For an LTI system this abstract definition reduces to a purely **geometric** test
+on the poles, because each pole $$p = \sigma + j\omega$$ injects a mode $$e^{pt}$$
+whose envelope is $$e^{\sigma t}$$:
 
 $$
-\text{Stable} \iff \text{every pole has } \mathrm{Re}(s) < 0
-\;\;(\text{open left half of the } s\text{-plane}).
+\text{Stable} \iff \text{every pole satisfies } \mathrm{Re}(s) < 0
+\quad(\text{open left half of the } s\text{-plane}).
 $$
 
-Each pole $s = \sigma + j\omega$ contributes a term $\sim e^{\sigma t}$ to the
-natural response:
+### Reading the s-plane
 
-| Pole location | Contribution $e^{\sigma t}$ | Behavior |
+The real part of a pole sets growth or decay; the imaginary part sets oscillation
+frequency:
+
+| Pole location | Mode envelope $$e^{\sigma t}$$ | Behavior |
 |---|---|---|
-| $\sigma < 0$ (left half-plane) | decays | **stable** |
-| $\sigma > 0$ (right half-plane) | grows | **unstable** |
-| $\sigma = 0$ (imaginary axis) | constant / sustained oscillation | **marginally stable** |
+| Left half-plane, $$\sigma < 0$$ | decays to zero | **stable** |
+| Right half-plane, $$\sigma > 0$$ | grows without bound | **unstable** |
+| On the imaginary axis, $$\sigma = 0$$ | constant or sustained oscillation | **marginally stable** |
 
-A single pole in the right half-plane is enough to make the whole system
-unstable.
+A **single** pole in the right half-plane makes the whole system unstable,
+regardless of how many well-damped poles accompany it. The poles nearest the
+imaginary axis decay slowest and therefore **dominate** the long-term response —
+the idea of *dominant poles* that underlies the design approximations of later
+chapters. This pole-location view is what lets Chapters 5–7 judge and reshape
+stability *without ever solving the differential equation*.
 
-> **Group challenge.** A system has poles at $s = -3,\ -2,\ +1$. Stable? The pole
-> at $s = +1$ is in the right half-plane, so its response contains a growing
-> $e^{+t}$ term — the system is **unstable**, regardless of the two well-behaved
-> poles.
+### Recovering the time response
 
----
-
-## 2.7 The Inverse Laplace Transform (Partial Fractions)
-
-To recover $y(t)$ from $Y(s)$ we expand $Y(s)$ into simple terms whose inverse
-transforms we know from the table — **partial-fraction expansion**.
-
-### Worked example
-
-$$
-Y(s) = \frac{s+3}{(s+1)(s+2)} = \frac{A}{s+1} + \frac{B}{s+2}.
-$$
-
-**Cover-up (residue) method:**
-
-$$
-A = \left.\frac{s+3}{s+2}\right|_{s=-1} = \frac{2}{1} = 2,
-\qquad
-B = \left.\frac{s+3}{s+1}\right|_{s=-2} = \frac{1}{-1} = -1.
-$$
-
-So
-
-$$
-Y(s) = \frac{2}{s+1} - \frac{1}{s+2}
-\;\;\xrightarrow{\;\mathcal{L}^{-1}\;}\;\;
-y(t) = 2e^{-t} - e^{-2t},\quad t \ge 0.
-$$
-
-Both poles ($s=-1, -2$) are in the left half-plane, so $y(t) \to 0$ — a stable,
-decaying response, exactly as the pole-location test predicts.
-
-### Final-value and initial-value theorems
-
-Often we want the **steady-state** value without inverting the whole transform:
-
-$$
-\textbf{Final value: } \quad \lim_{t\to\infty} f(t) = \lim_{s\to 0} sF(s),
-$$
-
-valid **only if** $sF(s)$ has all poles in the left half-plane (otherwise the
-limit does not exist). Its companion:
-
-$$
-\textbf{Initial value: } \quad \lim_{t\to 0^+} f(t) = \lim_{s\to\infty} sF(s).
-$$
+To return from $$Y(s)$$ to $$y(t)$$ we use **partial-fraction expansion**: write
+$$Y(s)$$ as a sum of simple first- and second-order terms whose inverse transforms
+are tabulated, so each pole contributes its own mode to $$y(t)$$. The mechanics
+are practiced in the slides; the conceptual point is that **each pole becomes one
+term of the time response**, which is why pole locations tell us the behavior
+before any inversion is done.
 
 ---
 
-## 2.8 More Modeling Examples
+## 2.8 Electromechanical Coupling (DC Motor)
 
-### Two-mass mechanical system
+Many course plants — including the cart-pole and DC-motor simulations in
+[`simulation/`](../simulation/) — are **electromechanical**: an electrical
+subsystem drives a mechanical one through a coupling law. The DC motor is the
+canonical case, and it illustrates how two element models combine into one
+transfer function without us solving a specific numeric example.
 
-Consider two masses in a line: $M_1$ driven by force $r(t)$, connected to $M_2$
-through a spring $k$ and damper $b$; $M_2$ is also tied to a wall by a spring
-$k_2$. Let $y_1, y_2$ be the displacements. Newton's second law for each mass:
+- **Electrical side** (Kirchhoff's voltage law) couples applied voltage to
+  armature current, opposed by a **back-EMF** proportional to speed,
+  $$e_b = K_b\dot\theta$$.
+- **Coupling law:** motor torque is proportional to current, $$T = K_t i$$ (from
+  the Lorentz force on the windings).
+- **Mechanical side** (Newton's law for rotation) relates that torque to inertia
+  $$J$$ and friction $$b$$: $$J\ddot\theta + b\dot\theta = T$$.
 
-$$
-\begin{aligned}
-M_1\ddot y_1 &= r(t) - k(y_1 - y_2) - b(\dot y_1 - \dot y_2),\\
-M_2\ddot y_2 &= k(y_1 - y_2) + b(\dot y_1 - \dot y_2) - k_2 y_2.
-\end{aligned}
-$$
-
-Transform (zero initial conditions) and you obtain two coupled algebraic
-equations in $Y_1(s), Y_2(s)$. **Solve the second for $Y_2(s)$ in terms of
-$Y_1(s)$, substitute into the first, and eliminate the intermediate variable** to
-get the desired transfer function $Y_2(s)/R(s)$ or $Y_1(s)/R(s)$. This
-"write equations → transform → eliminate internal variables" recipe is the
-general method for any interconnected system.
-
-### Electromechanical system — the DC motor
-
-A DC motor converts electrical input (voltage $V$ or current $i$) into mechanical
-output (angle $\theta$ or speed $\omega = \dot\theta$). It couples an electrical
-circuit to a rotational mechanical system.
-
-**Electrical (armature) loop** — Kirchhoff's voltage law, with back-EMF
-$e_b = K_b\,\dot\theta$ opposing the applied voltage:
-
-$$
-V(t) = L\frac{di}{dt} + R\,i(t) + K_b\,\dot\theta(t).
-$$
-
-**Electromagnetic coupling** — the motor torque is proportional to armature
-current (from the Lorentz force $F = BiL$ acting on the windings):
-
-$$
-T(t) = K_t\,i(t).
-$$
-
-**Mechanical (rotor) dynamics** — Newton's law for rotation, with inertia $J$
-and viscous friction $b$:
-
-$$
-J\,\ddot\theta(t) + b\,\dot\theta(t) = T(t) = K_t\,i(t).
-$$
-
-**Laplace transform** (zero initial conditions):
-
-$$
-\begin{aligned}
-V(s) &= (Ls + R)\,I(s) + K_b\,s\,\Theta(s),\\
-(Js^2 + bs)\,\Theta(s) &= K_t\,I(s).
-\end{aligned}
-$$
-
-Solve the second equation for $I(s)$ and substitute into the first to eliminate
-the current. The **voltage-to-position** transfer function is
-
-$$
-\frac{\Theta(s)}{V(s)}
-= \frac{K_t}{s\big[(Ls+R)(Js+b) + K_t K_b\big]}.
-$$
-
-For the **voltage-to-speed** model ($\Omega = s\Theta$):
+Transforming each subsystem and eliminating the internal current variable yields
+the voltage-to-speed transfer function
 
 $$
 \frac{\Omega(s)}{V(s)}
-= \frac{K_t}{(Ls+R)(Js+b) + K_t K_b}.
+= \frac{K_t}{(Ls + R)(Js + b) + K_t K_b},
 $$
 
-> **Useful simplification.** The armature inductance $L$ is usually tiny, so
-> setting $L \approx 0$ collapses the speed model to a **first-order** system:
-> $$
-> \frac{\Omega(s)}{V(s)} \approx \frac{K_t/(RJ)}{\,s + (Rb + K_tK_b)/(RJ)\,},
-> $$
-> a single pole on the negative real axis — hence inherently stable. This is the
-> exact model behind the DC-motor / cart-pole simulations in
-> [`simulation/`](../simulation/).
+where $$\Omega = s\Theta$$. The structural lesson is general: **model each energy
+domain with its own law, link them through the coupling term, transform, and
+eliminate the shared internal variables.** When the electrical time constant is
+much faster than the mechanical one (small inductance $$L$$), the model collapses
+to first order — a single left-half-plane pole, hence inherently stable — which is
+why a simple DC motor is so easy to control.
 
 ---
 
 ## 2.9 Block-Diagram Models
 
-Block diagrams turn "equation jungles" into a clear **left-to-right signal
-flow**, making feedback paths and multi-subsystem interactions intuitive. Each
-block holds a transfer function; arrows carry signals; circles are summing
-junctions.
+### Diagrams as an algebra
 
-### The three reduction rules
+A block diagram is a **graphical algebra** of transfer functions: each block
+multiplies its input by $$G(s)$$, arrows carry signals, and summing junctions add
+or subtract them. The value of the diagram is that it makes **signal flow and
+feedback paths** explicit, where a wall of equations would hide them. Three
+interconnection rules let us reduce any diagram of LTI blocks:
 
-| Configuration | Equivalent transfer function |
+| Interconnection | Equivalent transfer function |
 |---|---|
-| **Series (cascade):** $G_1$ then $G_2$ | $G_1 G_2$ |
-| **Parallel:** $G_1$ and $G_2$ summed | $G_1 + G_2$ |
-| **Feedback:** forward $G$, feedback $H$ | $\dfrac{G}{1 \pm GH}$ |
+| **Series (cascade)** $$G_1$$ then $$G_2$$ | $$G_1 G_2$$ |
+| **Parallel**, outputs summed | $$G_1 + G_2$$ |
+| **Feedback**, forward $$G$$, feedback $$H$$ | $$\dfrac{G}{1 \pm GH}$$ |
 
-The feedback formula is the workhorse of the whole course. For a **negative**
-feedback loop with forward path $G(s)$ and feedback path $H(s)$, the
-**closed-loop transfer function** is
+### Deriving the feedback formula
+
+The feedback rule is the most important relation in the course, and it follows
+from one line of algebra. For **negative** feedback, the error is
+$$E = R - HY$$ and the output is $$Y = GE$$. Substituting,
 
 $$
+Y = G(R - HY) \;\;\Rightarrow\;\; Y(1 + GH) = GR
+\;\;\Rightarrow\;\;
 \frac{Y(s)}{R(s)} = \frac{G(s)}{1 + G(s)H(s)}.
 $$
 
-The denominator $1 + G(s)H(s) = 0$ is the **closed-loop characteristic
-equation** — its roots are the closed-loop poles, which is where Chapters 5–9
-(stability, root locus, frequency response, design) all begin.
-
-### Reduction strategy
-
-To simplify a complex diagram:
-
-1. Combine cascaded blocks (multiply) and parallel blocks (add).
-2. Collapse each inner feedback loop with $G/(1 \pm GH)$.
-3. Move summing points / pickoff points to expose more series–parallel–feedback
-   structure, then repeat.
-
-> **Example pattern.** For a unit-step input $R(s) = 1/s$ applied to a reduced
-> loop $T(s) = G/(1+GH)$, the output is $Y(s) = T(s)/s$; partial-fraction
-> expansion plus the table gives $y(t)$, and the **final-value theorem**
-> $y(\infty) = \lim_{s\to 0} sY(s) = T(0)$ gives the steady-state value directly.
+The denominator $$1 + G(s)H(s)$$, set to zero, is the **closed-loop
+characteristic equation** — its roots are the closed-loop poles. Feedback
+**relocates the poles**, and that single fact is the lever behind every design
+method to come: root locus (Chapter 6) traces *where* the poles move as a gain
+varies, and the frequency-response methods (Chapter 7) judge stability from
+$$G(s)H(s)$$ directly.
 
 ---
 
-## Summary — key formulas
+## Summary — the through-line
 
-| Concept | Result |
-|---|---|
-| Mass–spring–damper | $M\ddot y + b\dot y + ky = r(t)$ |
-| Transfer function | $G(s) = \dfrac{Y(s)}{R(s)} = \dfrac{p(s)}{q(s)}$ (zero ICs) |
-| First-order linearization | $f(x)\approx f(x_0) + f'(x_0)(x-x_0)$ |
-| Laplace definition | $F(s) = \int_0^\infty f(t)e^{-st}\,dt$ |
-| Derivative rule | $\mathcal{L}\{\dot f\} = sF(s) - f(0)$ |
-| Stability | all poles in left half-plane, $\mathrm{Re}(s) < 0$ |
-| Final-value theorem | $\lim_{t\to\infty} f(t) = \lim_{s\to 0} sF(s)$ |
-| Negative feedback | $\dfrac{Y}{R} = \dfrac{G}{1+GH}$ |
+| Stage | Object | Key idea |
+|---|---|---|
+| Physical laws | differential equation | energy-storage elements set the order |
+| Nonlinear → linear | Taylor / Jacobian | tangent model valid near an equilibrium |
+| Time → frequency | Laplace transform | calculus becomes algebra in $$s$$ |
+| Input–output | transfer function $$G(s)$$ | the transformed impulse response |
+| Behavior | poles & zeros | poles are natural modes $$e^{pt}$$ |
+| Stability | s-plane | all poles in $$\mathrm{Re}(s) < 0$$ |
+| Interconnection | block diagram | feedback $$=\dfrac{G}{1+GH}$$ relocates poles |
 
 ## Course Materials
-- 📊 Slides: [chapter2_mathematical_models](../slides/)
+- 📊 Slides: [chapter2_mathematical_models](../slides/) — worked examples and derivations
 - 📝 Examples: [Examples](../examples/)
 - 💻 Simulation: [DC-motor & cart-pole code](../simulation/)
 
-> **Looking ahead.** Once a system is reduced to a transfer function with known
-> poles, Chapter 4 reads its *time response* off those poles, and Chapter 5 tests
-> *stability* without ever solving for them. Chapter 8 returns to the same
-> physical models in **state-space** form.
+> **Looking ahead.** With a plant reduced to a transfer function and its poles,
+> Chapter 4 reads the *time response* directly from pole locations, Chapter 5
+> tests *stability* algebraically, and Chapter 8 returns to these same physical
+> systems in **state-space** form.

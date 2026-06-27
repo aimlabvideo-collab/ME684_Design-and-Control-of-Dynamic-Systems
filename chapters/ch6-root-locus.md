@@ -13,13 +13,13 @@ nav_order: 6
 
 ## Key Topics
 ### 6.1 Root Locus Fundamentals
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 6.2 Sketching Rules
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 6.3 Controller Design via Root Locus
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 
 ## Course Materials

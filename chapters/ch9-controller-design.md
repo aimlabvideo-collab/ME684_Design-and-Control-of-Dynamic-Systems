@@ -13,13 +13,13 @@ nav_order: 9
 
 ## Key Topics
 ### 9.1 PID Control
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 9.2 State-Feedback & Pole Placement
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 ### 9.3 Case Studies & Final Project
-(Write your notes here. You can use markdown headings, lists, images, and math like $G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$.)
+(Write your notes here. You can use markdown headings, lists, images, and math like $$G(s) = \dfrac{K}{s^2 + 2\zeta\omega_n s + \omega_n^2}$$.)
 
 
 ## Course Materials

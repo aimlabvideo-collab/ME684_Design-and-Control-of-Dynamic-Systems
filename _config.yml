@@ -22,14 +22,13 @@ footer_content: "ME 684 · California State University, Northridge · Maintained
 plugins:
   - jekyll-remote-theme
 
-# Markdown settings tuned for MathJax (loaded in _includes/head_custom.html):
-#  - math_engine: null  -> leave math for MathJax; without it kramdown wraps
-#    $$...$$ in <script type="math/tex"> tags that MathJax 3 does not scan.
-#  - input: GFM         -> do NOT treat intra-word underscores as italics, so
-#    inline math like $x_{1,0}$ or $\omega_n^2$ is not mangled into <em> tags.
-#  - hard_wrap: false   -> keep single newlines as spaces (GFM default would
-#    insert a <br> at every line break and break paragraph flow).
+# Let MathJax (loaded in _includes/head_custom.html) render all math.
+# math_engine: null tells kramdown to parse $$...$$ as math but emit plain
+# \(...\) (inline) / \[...\] (display) delimiters instead of <script type=
+# "math/tex"> tags, which MathJax 3 does not scan. Because kramdown's math
+# parser consumes the delimited content, underscores inside math (e.g.
+# $$x_{1,0}$$, $$\omega_n^2$$) are NOT misread as <em> emphasis.
+# NOTE: write ALL math with double-dollar $$...$$ delimiters (both inline and
+# display) so the math parser — not the emphasis parser — handles it.
 kramdown:
-  input: GFM
-  hard_wrap: false
   math_engine: null
