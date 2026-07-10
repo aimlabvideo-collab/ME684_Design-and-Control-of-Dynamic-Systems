@@ -263,9 +263,9 @@ hinged to it and swings freely. The pole has mass $$m$$, moment of inertia $$I$$
 about its own center of mass (COM), and its COM lies a distance $$l_c$$ from the
 hinge. Take generalized coordinates
 
-$$
-q = \left[\begin{array}{c} p \\ \theta \end{array}\right],
-$$
+<p align="center">
+  <img src="../figures/ch2/eq_q.png" alt="q equals the 2 by 1 column vector [p; theta]" width="74" style="max-width:100%; height:auto;">
+</p>
 
 the **cart position** $$p$$ and the **pole angle** $$\theta$$ measured from the
 upward vertical. Because there are two coordinates, $$q$$, $$\dot q$$, and
@@ -307,15 +307,15 @@ $$
 **Matrix form.** Collecting the accelerations puts the model in exactly the
 standard structure:
 
-$$
-\left[\begin{array}{cc} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{array}\right] \left[\begin{array}{c} \ddot p \\ \ddot\theta \end{array}\right] = \left[\begin{array}{c} F + m l_c\sin\theta\,\dot\theta^2 \\ m g l_c\sin\theta \end{array}\right].
-$$
+<p align="center">
+  <img src="../figures/ch2/eq_matrixform.png" alt="2x2 inertia matrix times [p-ddot; theta-ddot] equals the forcing column vector" width="430" style="max-width:100%; height:auto;">
+</p>
 
 Reading off $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$ term by term,
 
-$$
-M(q) = \left[\begin{array}{cc} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{array}\right], \quad C(q,\dot q)\dot q = \left[\begin{array}{c} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{array}\right], \quad g(q) = \left[\begin{array}{c} 0 \\ -m g l_c\sin\theta \end{array}\right], \quad \tau = \left[\begin{array}{c} F \\ 0 \end{array}\right].
-$$
+<div style="overflow-x:auto; text-align:center;">
+  <img src="../figures/ch2/eq_decomp.png" alt="M(q), C(q,qdot)qdot, g(q), and tau as explicit 2x2 and 2x1 arrays" width="880" style="max-width:100%; height:auto;">
+</div>
 
 Two features are worth naming. First, $$\tau$$ has an entry only in the cart row:
 the pole carries **no motor**, so this is an **underactuated** system — one
