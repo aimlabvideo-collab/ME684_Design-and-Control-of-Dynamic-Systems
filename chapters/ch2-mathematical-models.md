@@ -218,7 +218,7 @@ $$q_i$$. Constraint forces that do no net work never appear. We trade a vector
 force balance for a little calculus on two scalars, and for anything with more
 than one moving body that is a large saving.
 
-### The standard "manipulator" form
+### Rigid-body equation of motion
 
 Carrying out the derivatives, the Euler–Lagrange equations of **any** rigid-body
 mechanical system always collapse into the same structured second-order form:
