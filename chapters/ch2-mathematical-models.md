@@ -264,11 +264,13 @@ about its own center of mass (COM), and its COM lies a distance $$l_c$$ from the
 hinge. Take generalized coordinates
 
 $$
-q = (p, \theta),
+q = \begin{bmatrix} p \\ \theta \end{bmatrix},
 $$
 
 the **cart position** $$p$$ and the **pole angle** $$\theta$$ measured from the
-upward vertical. Only the cart is driven, so the generalized forces are
+upward vertical. Because there are two coordinates, $$q$$, $$\dot q$$, and
+$$\ddot q$$ are $$2 \times 1$$ column vectors and the inertia matrix $$M(q)$$ is
+$$2 \times 2$$. Only the cart is driven, so the generalized forces are
 $$Q_p = F$$ and $$Q_\theta = 0$$.
 
 **Positions.** The cart sits at $$(p, 0)$$; the pole COM is at
