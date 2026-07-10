@@ -186,9 +186,7 @@ The equations of motion are then the **Euler–Lagrange equations**, one per
 coordinate:
 
 $$
-\frac{d}{dt}\!\left(\frac{\partial L}{\partial \dot q_i}\right)
-- \frac{\partial L}{\partial q_i} = Q_i,
-\qquad i = 1, \dots, n,
+\frac{d}{dt}\left(\frac{\partial L}{\partial \dot q_i}\right) - \frac{\partial L}{\partial q_i} = Q_i, \qquad i = 1, \dots, n.
 $$
 
 where $$Q_i$$ is the **generalized force** — the non-conservative and external
@@ -260,12 +258,12 @@ $$
 and $$\dot y_c = -l_c\sin\theta\,\dot\theta$$, so
 
 $$
-T = \tfrac12 M\dot p^2
-  + \tfrac12 m\big(\dot x_c^2 + \dot y_c^2\big)
-  + \tfrac12 I\dot\theta^2
-  = \tfrac12 (M+m)\dot p^2
-  + m l_c\cos\theta\,\dot p\,\dot\theta
-  + \tfrac12\big(I + m l_c^2\big)\dot\theta^2 .
+T = \tfrac12 M\dot p^2 +
+    \tfrac12 m\big(\dot x_c^2 + \dot y_c^2\big) +
+    \tfrac12 I\dot\theta^2 =
+    \tfrac12 (M+m)\dot p^2 +
+    m l_c\cos\theta\,\dot p\,\dot\theta +
+    \tfrac12\big(I + m l_c^2\big)\dot\theta^2 .
 $$
 
 **Potential energy.** Measuring from the hinge height, $$V = m g l_c\cos\theta$$.
