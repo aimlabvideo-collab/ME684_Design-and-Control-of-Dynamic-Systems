@@ -264,7 +264,7 @@ about its own center of mass (COM), and its COM lies a distance $$l_c$$ from the
 hinge. Take generalized coordinates
 
 $$
-q = \begin{bmatrix} p \\ \theta \end{bmatrix},
+q = \left[\begin{array}{c} p \\ \theta \end{array}\right],
 $$
 
 the **cart position** $$p$$ and the **pole angle** $$\theta$$ measured from the
@@ -308,13 +308,13 @@ $$
 standard structure:
 
 $$
-\begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix} \begin{bmatrix} \ddot p \\ \ddot\theta \end{bmatrix} = \begin{bmatrix} F + m l_c\sin\theta\,\dot\theta^2 \\ m g l_c\sin\theta \end{bmatrix}.
+\left[\begin{array}{cc} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{array}\right] \left[\begin{array}{c} \ddot p \\ \ddot\theta \end{array}\right] = \left[\begin{array}{c} F + m l_c\sin\theta\,\dot\theta^2 \\ m g l_c\sin\theta \end{array}\right].
 $$
 
 Reading off $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$ term by term,
 
 $$
-M(q) = \begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix}, \quad C(q,\dot q)\dot q = \begin{bmatrix} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{bmatrix}, \quad g(q) = \begin{bmatrix} 0 \\ -m g l_c\sin\theta \end{bmatrix}, \quad \tau = \begin{bmatrix} F \\ 0 \end{bmatrix}.
+M(q) = \left[\begin{array}{cc} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{array}\right], \quad C(q,\dot q)\dot q = \left[\begin{array}{c} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{array}\right], \quad g(q) = \left[\begin{array}{c} 0 \\ -m g l_c\sin\theta \end{array}\right], \quad \tau = \left[\begin{array}{c} F \\ 0 \end{array}\right].
 $$
 
 Two features are worth naming. First, $$\tau$$ has an entry only in the cart row:
