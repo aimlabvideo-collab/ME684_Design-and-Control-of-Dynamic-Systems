@@ -9,14 +9,14 @@ nav_order: 2
 {: .no_toc }
 
 Control design begins with a **mathematical model** of the plant. This chapter
-develops the theory behind that model: how physical laws become **differential
-equations**, how **energy methods (the Lagrangian)** produce the equations of
-motion of multi-body systems, why and when we may **linearize** a nonlinear
-model, how the **Laplace transform** turns calculus into algebra, what a
-**transfer function** really represents, and how **pole locations** govern
-stability. Most worked numerical examples live in the lecture slides; here we
-focus on *why* each tool works and *when* it is valid, with one fully worked
-mechanical example — the **cart-pole** — carried through the modeling steps.
+develops the theory behind that model: how **Newton's second law** and **energy
+methods (the Lagrangian)** turn physical laws into **differential equations**, why
+and when we may **linearize** a nonlinear model, how the **Laplace transform**
+turns calculus into algebra, what a **transfer function** really represents, and
+how **pole locations** govern stability. Most worked numerical examples live in
+the lecture slides; here we focus on *why* each tool works and *when* it is valid,
+with two fully worked mechanical examples — the **mass–spring–damper** and the
+**cart-pole** — carried through the modeling steps.
 
 <details open markdown="block">
   <summary>Contents</summary>
@@ -33,9 +33,9 @@ By the end of this chapter you should be able to:
 
 - Explain what a mathematical model is, the assumptions behind it, and the
   trade-off between **fidelity and simplicity**.
-- Derive equations of motion by **energy methods (the Euler–Lagrange equation)**
-  and cast any mechanical system in the standard form
-  $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$.
+- Derive equations of motion by **Newton's second law** (via a free-body diagram)
+  and by **energy methods (the Euler–Lagrange equation)**, and cast any mechanical
+  system in the standard form $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$.
 - State the defining properties of a **linear, time-invariant (LTI)** system and
   explain why linearity is so powerful.
 - Justify **linearization** as a Taylor-series approximation about an
@@ -105,49 +105,72 @@ Modeling is systematic, not ad hoc. The recipe is always the same:
 
 ---
 
-## 2.2 Differential-Equation Models
+## 2.2 Newton's Second Law and the Free-Body Diagram
 
-### Element laws and the standard LTI form
+For a mechanical system the most direct route to a model is **Newton's second
+law**: isolate each mass, account for every force acting on it, and set the net
+force equal to mass times acceleration. The bookkeeping device that makes this
+reliable is the **free-body diagram (FBD)** — a sketch of one isolated body with
+every force drawn as an arrow. Done consistently, the FBD turns a physical
+picture into an equation with no guesswork about signs.
 
-Physical modeling rests on a small library of **element laws** relating effort
-and flow variables. In translational mechanics, for example, the three passive
-elements contribute forces:
+### Element laws
 
-$$
-\text{inertia: } F = M\ddot y, \qquad
-\text{damping: } F = b\dot y, \qquad
-\text{stiffness: } F = k y.
-$$
-
-Summing them through Newton's second law produces a linear, constant-coefficient
-ordinary differential equation. The **mass–spring–damper** is the canonical
-second-order example,
+Physical modeling rests on a small library of **element laws** relating force to
+motion. In translational mechanics the three passive elements each contribute a
+force:
 
 $$
-M\,\ddot y(t) + b\,\dot y(t) + k\,y(t) = r(t),
+\text{inertia: } F = M\ddot y, \qquad \text{damping: } F = b\dot y, \qquad \text{stiffness: } F = k y.
 $$
 
-and it is worth memorizing as a *structural template*: an **inertia** term
-(highest derivative), a **dissipation** term (first derivative), a **restoring**
-term (zeroth derivative), and a **forcing** input on the right. An enormous range
-of electrical, thermal, and electromechanical systems reduces to exactly this
-form, which is why second-order intuition carries so far in control.
+The inertia force resists acceleration, the damping (friction) force resists
+velocity, and the spring force resists displacement. Each is proportional to a
+different derivative of $$y$$, and that is what gives a mechanical model its
+characteristic second-order structure.
 
-In general, an $$n$$th-order LTI system is written
+### Worked example: the mass–spring–damper
+
+Take a mass $$M$$ hung from a spring of stiffness $$k$$ and a damper of
+coefficient $$b$$, driven by an applied force $$r(t)$$, with $$y(t)$$ the
+displacement measured downward from the rest position.
+
+<p align="center">
+  <img src="../figures/ch2/mass_spring_damper.png"
+       alt="Mass-spring-damper physical system and its free-body diagram"
+       width="640">
+</p>
+
+**Step 1 — isolate the mass and draw the FBD.** Cut the spring and the damper and
+replace them by the forces they exert. What remains is a single body acted on by
+the applied force $$r(t)$$ pulling it down, the spring reaction $$k y$$ pulling it
+back up, and the damping reaction $$b\dot y$$ opposing its velocity.
+
+**Step 2 — apply Newton's second law.** Summing forces along the positive
+(downward) $$y$$ direction, $$M\ddot y$$ equals the net force:
 
 $$
-a_n y^{(n)} + a_{n-1} y^{(n-1)} + \cdots + a_1 \dot y + a_0 y
-= b_m r^{(m)} + \cdots + b_1 \dot r + b_0 r,
+M\ddot y = r(t) - b\dot y - k y,
 $$
 
-with constant coefficients $$a_i, b_j$$. The **order** $$n$$ equals the number of
-independent energy-storage elements (masses, springs, capacitors, inductors) and
-fixes the number of initial conditions the system needs.
+since the spring and damper both oppose the motion while $$r(t)$$ drives it.
+Moving the output terms to the left gives the standard form
 
-### Why some models are nonlinear
+$$
+M\,\ddot y(t) + b\,\dot y(t) + k\,y(t) = r(t).
+$$
 
-The LTI template breaks whenever an element law is not proportional. The
-archetype is a rotating link under gravity (a one-DOF arm or pendulum),
+This is the **canonical second-order system**, worth memorizing as a *structural
+template*: an **inertia** term (highest derivative), a **dissipation** term
+(first derivative), a **restoring** term (zeroth derivative), and a **forcing**
+input on the right. An enormous range of electrical, thermal, and
+electromechanical systems reduces to exactly this form, which is why second-order
+intuition carries so far in control.
+
+### When Newton's law gives a nonlinear model
+
+The same procedure applied to a rotating link under gravity — a one-DOF arm or
+pendulum — gives
 
 $$
 J\,\ddot\theta(t) + m g l\,\sin\theta(t) = \tau(t),
@@ -155,9 +178,9 @@ $$
 
 where the **gravitational restoring torque is proportional to $$\sin\theta$$, not
 to $$\theta$$**. That single transcendental term forbids a closed-form solution
-and disqualifies the Laplace/transfer-function tools — which assume linearity.
+and disqualifies the Laplace / transfer-function tools, which assume linearity.
 Rather than abandon those tools, we **approximate** the model by a linear one
-that is accurate near the operating point. That is the subject of Section 2.5.
+that is accurate near an operating point — the subject of Section 2.5.
 
 ---
 
@@ -355,7 +378,7 @@ method in this course:
 A system is **time-invariant** if delaying the input merely delays the output by
 the same amount: $$x(t) \mapsto y(t)$$ implies $$x(t - T) \mapsto y(t - T)$$.
 Combined with linearity, this is what allows a system to be represented by a
-single, fixed transfer function (Section 2.7) rather than a relationship that
+single, fixed transfer function (Section 2.8) rather than a relationship that
 changes from moment to moment.
 
 ### Recognizing nonlinearity at a glance
@@ -432,7 +455,34 @@ nonlinear plant yields *different* linear models at different operating points.
 
 ---
 
-## 2.6 The Laplace Transform
+## 2.6 Differential-Equation Models
+
+Newton's law (Section 2.2) and the Lagrangian (Section 2.3) both deliver
+differential equations, and linearization (Section 2.5) guarantees they can be
+made **linear** near an operating point. Whatever its physical origin, every such
+linear, time-invariant model can then be written in one **standard form** — and
+it is that common form the transform tools of the coming sections act on.
+
+An $$n$$th-order LTI system relating input $$r(t)$$ to output $$y(t)$$ is
+
+$$
+a_n y^{(n)} + a_{n-1} y^{(n-1)} + \cdots + a_1 \dot y + a_0 y = b_m r^{(m)} + \cdots + b_1 \dot r + b_0 r,
+$$
+
+with constant coefficients $$a_i, b_j$$. The **order** $$n$$ equals the number of
+independent energy-storage elements (masses, springs, capacitors, inductors) and
+fixes how many initial conditions the system needs. The mass–spring–damper of
+Section 2.2 is the second-order case $$n = 2$$; the general form simply allows
+more storage elements and a richer forcing on the right.
+
+Writing a model in this standard form is the last step before we change domains.
+In the next section the **Laplace transform** turns each derivative $$y^{(k)}$$
+into a power $$s^k$$, collapsing this differential equation into an algebraic one
+— and with it, the entire transfer-function method.
+
+---
+
+## 2.7 The Laplace Transform
 
 ### Why transform at all
 
@@ -501,7 +551,7 @@ The power of the method is in a handful of properties:
 *The **final-value theorem** is valid only when $$sF(s)$$ has all its poles in the
 open left half-plane; otherwise the time limit does not exist and the formula is
 meaningless. This caveat is itself a stability statement — a preview of
-Section 2.8.
+Section 2.9.
 
 Notice how the differentiation property threads the **initial conditions**
 $$f(0), \dot f(0)$$ into the algebra. Transfer functions adopt the convention of
@@ -511,7 +561,7 @@ multiplication.
 
 ---
 
-## 2.7 Transfer Functions, Poles, and Zeros
+## 2.8 Transfer Functions, Poles, and Zeros
 
 ### Definition and meaning
 
@@ -563,7 +613,7 @@ poles in the complex plane *is* the time behavior.
 
 ---
 
-## 2.8 Stability and the s-Plane
+## 2.9 Stability and the s-Plane
 
 ### BIBO stability
 
@@ -608,7 +658,7 @@ before any inversion is done.
 
 ---
 
-## 2.9 Electromechanical Coupling (DC Motor)
+## 2.10 Electromechanical Coupling (DC Motor)
 
 Many course plants — including the cart-pole and DC-motor simulations in
 [`simulation/`](../simulation/) — are **electromechanical**: an electrical
@@ -641,7 +691,7 @@ why a simple DC motor is so easy to control.
 
 ---
 
-## 2.10 Block-Diagram Models
+## 2.11 Block-Diagram Models
 
 ### Diagrams as an algebra
 
@@ -682,9 +732,10 @@ $$G(s)H(s)$$ directly.
 
 | Stage | Object | Key idea |
 |---|---|---|
-| Physical laws | differential equation | energy-storage elements set the order |
+| Newton's law | free-body diagram | sum of forces $$= M\ddot y$$ gives the ODE |
 | Energy methods | Lagrangian $$L = T - V$$ | $$M(q)\ddot q + C\dot q + g = \tau$$, no constraint forces |
 | Nonlinear → linear | Taylor / Jacobian | tangent model valid near an equilibrium |
+| Standard form | $$n$$th-order LTI ODE | order $$=$$ number of energy-storage elements |
 | Time → frequency | Laplace transform | calculus becomes algebra in $$s$$ |
 | Input–output | transfer function $$G(s)$$ | the transformed impulse response |
 | Behavior | poles & zeros | poles are natural modes $$e^{pt}$$ |
