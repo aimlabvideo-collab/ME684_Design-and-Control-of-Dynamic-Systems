@@ -10,11 +10,13 @@ nav_order: 2
 
 Control design begins with a **mathematical model** of the plant. This chapter
 develops the theory behind that model: how physical laws become **differential
-equations**, why and when we may **linearize** a nonlinear model, how the
-**Laplace transform** turns calculus into algebra, what a **transfer function**
-really represents, and how **pole locations** govern stability. The worked
-numerical examples live in the lecture slides; here we focus on *why* each tool
-works and *when* it is valid.
+equations**, how **energy methods (the Lagrangian)** produce the equations of
+motion of multi-body systems, why and when we may **linearize** a nonlinear
+model, how the **Laplace transform** turns calculus into algebra, what a
+**transfer function** really represents, and how **pole locations** govern
+stability. Most worked numerical examples live in the lecture slides; here we
+focus on *why* each tool works and *when* it is valid, with one fully worked
+mechanical example — the **cart-pole** — carried through the modeling steps.
 
 <details open markdown="block">
   <summary>Contents</summary>
@@ -31,6 +33,9 @@ By the end of this chapter you should be able to:
 
 - Explain what a mathematical model is, the assumptions behind it, and the
   trade-off between **fidelity and simplicity**.
+- Derive equations of motion by **energy methods (the Euler–Lagrange equation)**
+  and cast any mechanical system in the standard form
+  $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$.
 - State the defining properties of a **linear, time-invariant (LTI)** system and
   explain why linearity is so powerful.
 - Justify **linearization** as a Taylor-series approximation about an
@@ -74,8 +79,8 @@ is:
 - **Lumped-parameter** — described by a finite number of states (ordinary, not
   partial, differential equations). Mass, stiffness, and damping are treated as
   concentrated elements rather than spatially distributed fields.
-- **Linear** — superposition holds (Section 2.3); when it does not, we
-  *linearize* (Section 2.4).
+- **Linear** — superposition holds (Section 2.4); when it does not, we
+  *linearize* (Section 2.5).
 - **Time-invariant** — the parameters do not change with time, so the system's
   response to an input does not depend on *when* the input is applied.
 - **Causal** — the output depends only on present and past inputs.
@@ -152,11 +157,172 @@ where the **gravitational restoring torque is proportional to $$\sin\theta$$, no
 to $$\theta$$**. That single transcendental term forbids a closed-form solution
 and disqualifies the Laplace/transfer-function tools — which assume linearity.
 Rather than abandon those tools, we **approximate** the model by a linear one
-that is accurate near the operating point. That is the subject of Section 2.4.
+that is accurate near the operating point. That is the subject of Section 2.5.
 
 ---
 
-## 2.3 Linearity, Time-Invariance, and Why They Matter
+## 2.3 Energy Methods: The Lagrangian
+
+Newton's second law (Section 2.2) works element by element, but it forces us to
+account for **every** force — including the internal **constraint forces** that
+hold a mechanism together (the reaction at a pin joint, the normal force in a
+slider). For a single mass these are a nuisance; for interconnected multi-body
+systems — a robot arm, a cart with a pole hinged on top — they become the bulk
+of the bookkeeping and most of them cancel in the end anyway. **Energy methods**
+avoid them entirely: write down two scalar energies and turn a crank.
+
+### Generalized coordinates and the Euler–Lagrange equation
+
+Choose a set of **generalized coordinates** $$q = (q_1, \dots, q_n)$$ — a minimal
+set of independent variables that completely specifies the configuration of the
+system. Their number $$n$$ is the number of **degrees of freedom**. Form the
+**Lagrangian** as the difference of kinetic and potential energy,
+
+$$
+L(q, \dot q) = T(q, \dot q) - V(q).
+$$
+
+The equations of motion are then the **Euler–Lagrange equations**, one per
+coordinate:
+
+$$
+\frac{d}{dt}\!\left(\frac{\partial L}{\partial \dot q_i}\right)
+- \frac{\partial L}{\partial q_i} = Q_i,
+\qquad i = 1, \dots, n,
+$$
+
+where $$Q_i$$ is the **generalized force** — the non-conservative and external
+inputs (actuator forces, applied torques, friction) associated with coordinate
+$$q_i$$. Constraint forces that do no net work never appear. We trade a vector
+force balance for a little calculus on two scalars, and for anything with more
+than one moving body that is a large saving.
+
+### The standard "manipulator" form
+
+Carrying out the derivatives, the Euler–Lagrange equations of **any** rigid-body
+mechanical system always collapse into the same structured second-order form:
+
+$$
+M(q)\,\ddot q + C(q, \dot q)\,\dot q + g(q) = \tau.
+$$
+
+Each term has a fixed physical meaning:
+
+- $$M(q)$$ — the **inertia (mass) matrix**, symmetric and positive definite. It
+  couples the accelerations; its entries can depend on configuration.
+- $$C(q, \dot q)\,\dot q$$ — the **Coriolis and centrifugal** terms, always
+  **quadratic in the velocities** (products $$\dot q_i \dot q_j$$).
+- $$g(q) = \partial V/\partial q$$ — the **gravitational / conservative
+  restoring** term.
+- $$\tau$$ — the vector of **generalized forces** delivered by the inputs.
+
+Solving for the accelerations,
+
+$$
+\ddot q = M(q)^{-1}\big(\tau - C(q,\dot q)\,\dot q - g(q)\big),
+$$
+
+is exactly the computation a physics engine performs at every timestep. A
+simulator such as **PyBullet** (used in [`simulation/`](../simulation/)) is
+handed only a description of the bodies and joints — masses, inertias, and how
+the links connect — from which it *assembles* $$M$$, $$C$$, and $$g$$ internally
+and integrates this equation forward. You never hand it the equations of motion;
+it builds them from the same principles derived here.
+
+### Worked example: the cart-pole
+
+<p align="center">
+  <img src="../figures/ch2/cartpole_schematic.png"
+       alt="Cart-pole schematic with generalized coordinates p and theta"
+       width="520">
+</p>
+
+A cart of mass $$M$$ slides horizontally under an applied force $$F$$; a pole is
+hinged to it and swings freely. The pole has mass $$m$$, moment of inertia $$I$$
+about its own center of mass (COM), and its COM lies a distance $$l_c$$ from the
+hinge. Take generalized coordinates
+
+$$
+q = (p, \theta),
+$$
+
+the **cart position** $$p$$ and the **pole angle** $$\theta$$ measured from the
+upward vertical. Only the cart is driven, so the generalized forces are
+$$Q_p = F$$ and $$Q_\theta = 0$$.
+
+**Positions.** The cart sits at $$(p, 0)$$; the pole COM is at
+
+$$
+x_c = p + l_c \sin\theta, \qquad y_c = l_c \cos\theta.
+$$
+
+**Kinetic energy.** Differentiating, $$\dot x_c = \dot p + l_c\cos\theta\,\dot\theta$$
+and $$\dot y_c = -l_c\sin\theta\,\dot\theta$$, so
+
+$$
+T = \tfrac12 M\dot p^2
+  + \tfrac12 m\big(\dot x_c^2 + \dot y_c^2\big)
+  + \tfrac12 I\dot\theta^2
+  = \tfrac12 (M+m)\dot p^2
+  + m l_c\cos\theta\,\dot p\,\dot\theta
+  + \tfrac12\big(I + m l_c^2\big)\dot\theta^2 .
+$$
+
+**Potential energy.** Measuring from the hinge height, $$V = m g l_c\cos\theta$$.
+
+**Euler–Lagrange.** Applying the equation to $$p$$ (with $$Q_p = F$$) and to
+$$\theta$$ (with $$Q_\theta = 0$$) gives the two coupled equations
+
+$$
+(M+m)\,\ddot p + m l_c\cos\theta\,\ddot\theta - m l_c\sin\theta\,\dot\theta^2 = F,
+$$
+
+$$
+m l_c\cos\theta\,\ddot p + \big(I + m l_c^2\big)\ddot\theta - m g l_c\sin\theta = 0.
+$$
+
+**Matrix form.** Collecting the accelerations puts the model in exactly the
+standard structure:
+
+$$
+\begin{bmatrix} M+m & m l_c\cos\theta \\[2pt]
+                m l_c\cos\theta & I + m l_c^2 \end{bmatrix}
+\begin{bmatrix} \ddot p \\[2pt] \ddot\theta \end{bmatrix}
+=
+\begin{bmatrix} F + m l_c\sin\theta\,\dot\theta^2 \\[2pt]
+                m g l_c\sin\theta \end{bmatrix}.
+$$
+
+Reading off $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$ term by term,
+
+$$
+M(q) = \begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix},
+\quad
+C(q,\dot q)\dot q = \begin{bmatrix} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{bmatrix},
+\quad
+g(q) = \begin{bmatrix} 0 \\ -m g l_c\sin\theta \end{bmatrix},
+\quad
+\tau = \begin{bmatrix} F \\ 0 \end{bmatrix}.
+$$
+
+Two features are worth naming. First, $$\tau$$ has an entry only in the cart row:
+the pole carries **no motor**, so this is an **underactuated** system — one
+actuator, two degrees of freedom — which is exactly what makes balancing it a
+control problem rather than a bookkeeping one. Second, the model is fully general
+in $$l_c$$ and $$I$$; for a **uniform rod** of length $$L$$ one substitutes
+$$l_c = L/2$$ and $$I = mL^2/12$$ (so that $$I + m l_c^2 = mL^2/3$$), while a
+**point mass** at the tip is the special case $$l_c = L,\ I = 0$$.
+
+**Toward control.** Near the upright equilibrium $$\theta \approx 0$$ we may take
+$$\sin\theta \approx \theta$$, $$\cos\theta \approx 1$$, and drop the
+$$\dot\theta^2$$ term — the linearization of the next section — which turns this
+nonlinear model into an LTI state-space pair $$(A, B)$$. That linear model is
+what the LQR controller in [`simulation/cartpole/`](../simulation/cartpole/) is
+designed on, and we return to it in **state-space** form in Chapter 8.
+
+---
+
+## 2.4 Linearity, Time-Invariance, and Why They Matter
 
 ### The definition
 
@@ -202,7 +368,7 @@ method in this course:
 A system is **time-invariant** if delaying the input merely delays the output by
 the same amount: $$x(t) \mapsto y(t)$$ implies $$x(t - T) \mapsto y(t - T)$$.
 Combined with linearity, this is what allows a system to be represented by a
-single, fixed transfer function (Section 2.6) rather than a relationship that
+single, fixed transfer function (Section 2.7) rather than a relationship that
 changes from moment to moment.
 
 ### Recognizing nonlinearity at a glance
@@ -215,7 +381,7 @@ operating range**, which is what makes the next section so useful.
 
 ---
 
-## 2.4 Linearization
+## 2.5 Linearization
 
 ### The idea: a tangent approximation about an equilibrium
 
@@ -279,7 +445,7 @@ nonlinear plant yields *different* linear models at different operating points.
 
 ---
 
-## 2.5 The Laplace Transform
+## 2.6 The Laplace Transform
 
 ### Why transform at all
 
@@ -348,7 +514,7 @@ The power of the method is in a handful of properties:
 *The **final-value theorem** is valid only when $$sF(s)$$ has all its poles in the
 open left half-plane; otherwise the time limit does not exist and the formula is
 meaningless. This caveat is itself a stability statement — a preview of
-Section 2.7.
+Section 2.8.
 
 Notice how the differentiation property threads the **initial conditions**
 $$f(0), \dot f(0)$$ into the algebra. Transfer functions adopt the convention of
@@ -358,7 +524,7 @@ multiplication.
 
 ---
 
-## 2.6 Transfer Functions, Poles, and Zeros
+## 2.7 Transfer Functions, Poles, and Zeros
 
 ### Definition and meaning
 
@@ -410,7 +576,7 @@ poles in the complex plane *is* the time behavior.
 
 ---
 
-## 2.7 Stability and the s-Plane
+## 2.8 Stability and the s-Plane
 
 ### BIBO stability
 
@@ -455,7 +621,7 @@ before any inversion is done.
 
 ---
 
-## 2.8 Electromechanical Coupling (DC Motor)
+## 2.9 Electromechanical Coupling (DC Motor)
 
 Many course plants — including the cart-pole and DC-motor simulations in
 [`simulation/`](../simulation/) — are **electromechanical**: an electrical
@@ -488,7 +654,7 @@ why a simple DC motor is so easy to control.
 
 ---
 
-## 2.9 Block-Diagram Models
+## 2.10 Block-Diagram Models
 
 ### Diagrams as an algebra
 
@@ -530,6 +696,7 @@ $$G(s)H(s)$$ directly.
 | Stage | Object | Key idea |
 |---|---|---|
 | Physical laws | differential equation | energy-storage elements set the order |
+| Energy methods | Lagrangian $$L = T - V$$ | $$M(q)\ddot q + C\dot q + g = \tau$$, no constraint forces |
 | Nonlinear → linear | Taylor / Jacobian | tangent model valid near an equilibrium |
 | Time → frequency | Laplace transform | calculus becomes algebra in $$s$$ |
 | Input–output | transfer function $$G(s)$$ | the transformed impulse response |
