@@ -283,24 +283,13 @@ $$
 standard structure:
 
 $$
-\begin{bmatrix} M+m & m l_c\cos\theta \\[2pt]
-                m l_c\cos\theta & I + m l_c^2 \end{bmatrix}
-\begin{bmatrix} \ddot p \\[2pt] \ddot\theta \end{bmatrix}
-=
-\begin{bmatrix} F + m l_c\sin\theta\,\dot\theta^2 \\[2pt]
-                m g l_c\sin\theta \end{bmatrix}.
+\begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix} \begin{bmatrix} \ddot p \\ \ddot\theta \end{bmatrix} = \begin{bmatrix} F + m l_c\sin\theta\,\dot\theta^2 \\ m g l_c\sin\theta \end{bmatrix}.
 $$
 
 Reading off $$M(q)\ddot q + C(q,\dot q)\dot q + g(q) = \tau$$ term by term,
 
 $$
-M(q) = \begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix},
-\quad
-C(q,\dot q)\dot q = \begin{bmatrix} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{bmatrix},
-\quad
-g(q) = \begin{bmatrix} 0 \\ -m g l_c\sin\theta \end{bmatrix},
-\quad
-\tau = \begin{bmatrix} F \\ 0 \end{bmatrix}.
+M(q) = \begin{bmatrix} M+m & m l_c\cos\theta \\ m l_c\cos\theta & I + m l_c^2 \end{bmatrix}, \quad C(q,\dot q)\dot q = \begin{bmatrix} -m l_c\sin\theta\,\dot\theta^2 \\ 0 \end{bmatrix}, \quad g(q) = \begin{bmatrix} 0 \\ -m g l_c\sin\theta \end{bmatrix}, \quad \tau = \begin{bmatrix} F \\ 0 \end{bmatrix}.
 $$
 
 Two features are worth naming. First, $$\tau$$ has an entry only in the cart row:
