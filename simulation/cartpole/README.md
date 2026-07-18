@@ -77,7 +77,7 @@ ME 684/
 │                           (Lab 1b, the linear model, is your assignment)
 ├── 02_open_loop.py          Lab 2: inputs chosen in advance all fail
 ├── 03_keyboard_balance.py   Lab 3: you close the loop
-└── results/                 plots land here
+└── results/                 plots from Labs 2-3, plus Lab 1 reference images
 ```
 
 Read `cartpole_env.py` first. Its docstring carries the full Lagrangian
@@ -123,6 +123,14 @@ the same equations.
 *Part 2* releases the pole and lets it fall, integrating our own model
 alongside the simulator. The two stay together at 3° and at 30° alike — the
 nonlinear model has made no approximation, so nothing degrades with angle.
+
+The script shows these plots rather than saving them. Committed here as a
+reference of what you should see:
+
+<p align="center">
+  <img src="results/01_nonlinear_small.png" alt="Free fall from 3 degrees" width="520"><br>
+  <img src="results/01_nonlinear_large.png" alt="Free fall from 30 degrees" width="520">
+</p>
 
 *Part 3* is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
 10⁻¹³ — they drift apart by a fraction of a degree. Part 1 already proved the

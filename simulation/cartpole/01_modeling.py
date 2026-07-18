@@ -37,6 +37,7 @@ from cartpole_env import (
 )
 
 # Short names, so the formulas below look like the ones on the board.
+# Parameters are in SI units: kg, m, s.
 M, m, lc, I = M_CART, M_POLE, LC, I_POLE
 
 
