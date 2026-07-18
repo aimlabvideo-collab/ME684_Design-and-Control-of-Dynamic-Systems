@@ -74,6 +74,7 @@ ME 684/
 ├── cartpole_env.py          shared: the model, the simulator wrapper, plotting
 ├── assets/cartpole.urdf     the robot description
 ├── 01_modeling.py           Lab 1: does our math describe the robot?
+│                           (Lab 1b, the linear model, is your assignment)
 ├── 02_open_loop.py          Lab 2: inputs chosen in advance all fail
 ├── 03_keyboard_balance.py   Lab 3: you close the loop
 └── results/                 plots land here
@@ -102,59 +103,66 @@ derivation wrong. `assets/cartpole.urdf` fixes the inertias.
 ## 3. Lab 1 — Mathematical modeling
 
 ```bash
-python 01_modeling.py           # opens plot windows
+python 01_modeling.py           # plots, then a PyBullet replay
 python 01_modeling.py --save    # headless, writes PNGs to results/
 ```
 
-Compares three things:
+Compares two things:
 
 | | what it is |
 |---|---|
 | **(A)** | PyBullet — the "real robot", which knows nothing about our algebra |
 | **(B)** | our nonlinear Lagrange equations, no approximations |
-| **(C)** | the linearized model `ṡ = As + Bu`, valid only near upright |
 
 **What to look for.**
 
-*Step 1* evaluates accelerations from (A) and (B) at the same random states and
+*Part 1* evaluates accelerations from (A) and (B) at the same random states and
 the same force. They agree to **~10⁻¹³**, i.e. to double-precision round-off.
 Our equations are not an approximation of the simulator's dynamics; they are
 the same equations.
 
-*Step 0* prints the eigenvalues of `A`. One of them is **+3.97 rad/s**, in the
-right half plane. Upright is an unstable equilibrium: left alone the pole always
-falls, with a time constant of 0.25 s. Remember that number — it is why Lab 3 is
-hard.
+*Part 2* releases the pole and lets it fall, integrating our own model
+alongside the simulator. The two stay together at 3° and at 30° alike — the
+nonlinear model has made no approximation, so nothing degrades with angle.
 
-It also prints `B[3] = −1.46 < 0`. **Pushing the cart right rotates the pole
-left.** So a pole falling to the right is caught by pushing *right*, moving the
-cart underneath it, exactly like chasing a broomstick balanced on your palm. Get
-this sign backwards and every controller gain in Chapter 3 flips.
-
-*Step 2* releases the pole and lets it fall. At 3° the linear model tracks; at
-30° it is off by 67°.
-
-*Step 3* is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
-10⁻¹³ — they drift apart by a fraction of a degree. Step 1 already proved the
+*Part 3* is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
+10⁻¹³ — they drift apart by a fraction of a degree. Part 1 already proved the
 dynamics are identical, so this cannot be a modeling error. It is the
 *integrator*: PyBullet uses semi-implicit Euler, we use RK4, and an unstable
-plant amplifies the difference exponentially. Shrink `dt` and watch:
+plant amplifies the difference exponentially. Shrink `dt` and watch it vanish:
 
 ```
-      dt [s] |  max|A-B| [deg]  max|A-C| [deg]
-     0.00417 |        0.192077        0.074818
-     0.00100 |        0.046623        0.127384
-     0.00025 |        0.011732        0.165223
-     0.00006 |        0.002938        0.174762
+      dt |  max |A-B| deg
+  0.00417 |     0.19208
+  0.00100 |     0.04662
+  0.00025 |     0.01173
+  0.00006 |     0.00294
 ```
 
-`|A−B| → 0`, a numerical artifact that vanishes. `|A−C| → 0.175°`, a real
-approximation error we *chose* to make when we wrote `sin θ ≈ θ`. Two errors
-that look alike in one column and are nothing alike.
+Roughly proportional to `dt`, heading to zero. A numerical artifact, not a
+modeling error — and a distinction worth keeping, because Lab 1b produces an
+error that looks just like this one in a table and behaves nothing like it.
 
-(Note the top row: at `dt = 1/240` the integration error is *larger* than the
-linearization error. Judge a model at a step size where the integrator is not
-the dominant term.)
+*Part 4* replays the trajectory **we computed** in the PyBullet viewer. Nothing
+is being simulated: each frame is a state our own equations produced, pushed
+into the renderer. The robot on screen is being driven by your algebra.
+
+### Lab 1b — the linear model *(assignment)*
+
+Lab 1 stopped at the nonlinear equations. Chapter 3 needs the **linearized**
+model, and getting there means deliberately throwing information away:
+
+> Linearize about the upright equilibrium by hand — `sin θ → θ`, `cos θ → 1`,
+> drop the `θ̇²` term — write the result as `ṡ = As + Bu`, and measure what the
+> approximation costs. Release from 3° and from 30°, plot (A), (B) and your
+> linear (C) together, and report `max |A − C|` for each. Then halve `dt`
+> repeatedly: one of the two errors goes to zero and the other does not.
+> Which, and why?
+
+The last question is the point of the whole lab. `|A−B|` is a numerical
+artifact that refinement removes; `|A−C|` is a real approximation you chose to
+make, and no amount of numerical care will remove it. **Refining `dt` cannot
+fix a wrong model.**
 
 ---
 
