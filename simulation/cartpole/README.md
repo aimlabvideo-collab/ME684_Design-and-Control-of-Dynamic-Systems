@@ -116,7 +116,7 @@ Compares two things:
 **What to look for.**
 
 *Part 1* evaluates accelerations from (A) and (B) at the same random states and
-the same force. They agree to **~10⁻¹³**, i.e. to double-precision round-off.
+the same force. They agree to **~10⁻¹⁴**, i.e. to double-precision round-off.
 Our equations are not an approximation of the simulator's dynamics; they are
 the same equations.
 
@@ -133,7 +133,7 @@ reference of what you should see:
 </p>
 
 *Part 3* is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
-10⁻¹³ — they drift apart by a fraction of a degree. Part 1 already proved the
+10⁻¹⁴ — they drift apart by a fraction of a degree. Part 1 already proved the
 dynamics are identical, so this cannot be a modeling error. It is the
 *integrator*: PyBullet uses semi-implicit Euler, we use RK4, and an unstable
 plant amplifies the difference exponentially. Shrink `dt` and watch it vanish:

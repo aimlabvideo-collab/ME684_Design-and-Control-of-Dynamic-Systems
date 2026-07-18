@@ -80,7 +80,11 @@ print("  thddot is positive -> it accelerates further over. It falls.")
 print("\nPART 1.  acceleration,  ours vs PyBullet")
 print("   theta       F |    thddot sim      model     error")
 
-dt = 1e-4                          # tiny, so (dv/dt) is a clean derivative
+# PyBullet updates velocity as v += a*dt, so (v_after - v_before)/dt hands
+# back the exact acceleration it used -- this is not an approximation, and
+# any dt works. Going much smaller actually hurts: a tiny difference divided
+# by a tiny dt amplifies floating-point round-off.
+dt = 1e-3                          # 1 ms
 env = CartPole(gui=False, dt=dt)
 rng = np.random.default_rng(0)     # fixed seed: everyone sees these numbers
 worst = 0.0
