@@ -13,6 +13,9 @@
   (A, B) matrices you derive on the board do not match the simulator, and the
   whole point of Chapter 2 collapses. Every inertia below is computed from the
   uniform-rectangular-box formula.
+  <visual> visual geometry is used for rendering, 
+  <collision> geometry is used for collision detection. when tey contact with each other.
+  <inertial> geometry is used for dynamics. how the mass is distributed in the body and move from the force and torque.
 -->
 <robot name="cartpole">
 
@@ -95,7 +98,10 @@
   </link>
 
   <!-- Rotation axis +y. The pole's local +z (up) tips toward +x, so theta > 0
-       means the pole leans to the right. -->
+       means the pole leans to the right. 
+      type : continuous: the joint can rotate freely without limits
+            revolute: the joint can rotate freely but has limits     
+  -->
   <joint name="cart_to_pole" type="continuous">
     <axis xyz="0 1 0"/>
     <origin xyz="0 0 0"/>
