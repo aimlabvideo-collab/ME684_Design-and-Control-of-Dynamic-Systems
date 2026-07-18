@@ -73,8 +73,11 @@ ME 684/
 ├── README.md
 ├── cartpole_env.py          shared: the model, the simulator wrapper, plotting
 ├── assets/cartpole.urdf     the robot description
-├── 01_modeling.py           Lab 1: does our math describe the robot?
-│                           (Lab 1b, the linear model, is your assignment)
+├── 01a_equations.py         Lab 1a: type our equations in, solve at a point
+├── 01b_check.py             Lab 1b: do they match the robot?
+├── 01c_trajectory.py        Lab 1c: run both forward in time
+├── 01d_replay.py            Lab 1d: watch our own equations move
+│                           (Lab 1e, the linear model, is your assignment)
 ├── 02_open_loop.py          Lab 2: inputs chosen in advance all fail
 ├── 03_keyboard_balance.py   Lab 3: you close the loop
 └── results/                 plots from Labs 2-3, plus Lab 1 reference images
@@ -103,8 +106,15 @@ derivation wrong. `assets/cartpole.urdf` fixes the inertias.
 ## 3. Lab 1 — Mathematical modeling
 
 ```bash
-python 01_modeling.py    # plots, then a PyBullet replay
+python 01a_equations.py     # our equations, solved at one instant
+python 01b_check.py         # ... and are they right?
+python 01c_trajectory.py    # run both forward, two plot windows
+python 01d_replay.py        # 3D replay of our own trajectory
 ```
+
+Four short files, run in order. Each one stands alone and reads top to
+bottom -- there are no functions to jump to and no shared state between
+them.
 
 Compares two things:
 
@@ -115,16 +125,16 @@ Compares two things:
 
 **What to look for.**
 
-*Part 1* evaluates accelerations from (A) and (B) at the same random states and
+**01b** evaluates accelerations from (A) and (B) at the same random states and
 the same force. They agree to **~10⁻¹⁴**, i.e. to double-precision round-off.
 Our equations are not an approximation of the simulator's dynamics; they are
 the same equations.
 
-*Part 2* releases the pole and lets it fall, integrating our own model
+**01c** releases the pole and lets it fall, integrating our own model
 alongside the simulator. The two stay together at 3° and at 30° alike — the
 nonlinear model has made no approximation, so nothing degrades with angle.
 
-The script shows these plots rather than saving them. Committed here as a
+`01c` shows these plots rather than saving them. Committed here as a
 reference of what you should see:
 
 <p align="center">
@@ -132,7 +142,7 @@ reference of what you should see:
   <img src="results/01_nonlinear_large.png" alt="Free fall from 30 degrees" width="520">
 </p>
 
-*Part 3* is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
+**01c**, second half, is the subtle one. Over a trajectory, (A) and (B) do **not** agree to
 10⁻¹⁴ — they drift apart by a fraction of a degree. Part 1 already proved the
 dynamics are identical, so this cannot be a modeling error. It is the
 *integrator*: PyBullet uses semi-implicit Euler, we use RK4, and an unstable
@@ -147,16 +157,16 @@ plant amplifies the difference exponentially. Shrink `dt` and watch it vanish:
 ```
 
 Roughly proportional to `dt`, heading to zero. A numerical artifact, not a
-modeling error — and a distinction worth keeping, because Lab 1b produces an
+modeling error — and a distinction worth keeping, because Lab 1e produces an
 error that looks just like this one in a table and behaves nothing like it.
 
-*Part 4* replays the trajectory **we computed** in the PyBullet viewer. Nothing
+**01d** replays the trajectory **we computed** in the PyBullet viewer. Nothing
 is being simulated: each frame is a state our own equations produced, pushed
 into the renderer. The robot on screen is being driven by your algebra.
 
-### Lab 1b — the linear model *(assignment)*
+### Lab 1e — the linear model *(assignment)*
 
-Lab 1 stopped at the nonlinear equations. Chapter 3 needs the **linearized**
+Labs 1a-1d stopped at the nonlinear equations. Chapter 3 needs the **linearized**
 model, and getting there means deliberately throwing information away:
 
 > Linearize about the upright equilibrium by hand — `sin θ → θ`, `cos θ → 1`,
@@ -321,7 +331,7 @@ your equations have no such term — `cartpole_env.py` zeroes it via
 
 **Plots do not appear.**
 `02_open_loop.py` and `03_keyboard_balance.py` take `--save` to run headless and
-write PNGs to `results/` instead. `01_modeling.py` always shows its windows.
+write PNGs to `results/` instead. The Lab 1 files always show their windows.
 
 ---
 
