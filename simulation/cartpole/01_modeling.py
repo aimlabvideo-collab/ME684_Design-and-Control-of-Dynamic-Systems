@@ -59,15 +59,25 @@ M, m, lc, I = M_CART, M_POLE, LC, I_POLE
 print("PART 0.  the model we derived")
 print(f"  M = {M} kg   m = {m} kg   lc = {lc} m   I = {I:.4f} kg m^2")
 
-s_test = np.array([0.0, 0.2, 0.0, 0.0])   # leaning 0.2 rad, at rest
+s_test = np.array([0.0, 0.2, 0.0, 0.0])   # leaning 0.2 rad, at rest (Initial states)
 th, thd = s_test[1], s_test[3]
+# mass: left hand side of the matrix in the equation
+# rhs: right hand side of the matrix in the equation
 mass = np.array([[M + m, m * lc * np.cos(th)],
                  [m * lc * np.cos(th), I + m * lc**2]])
 rhs = np.array([0.0 + m * lc * np.sin(th) * thd**2,
                 m * G * lc * np.sin(th)])
-print("  at theta = 0.2 rad, F = 0:  [xddot, thddot] =",
-      np.round(np.linalg.solve(mass, rhs), 4))
-print("  positive thddot -> it accelerates further over. It falls.")
+
+# Solve mass * [xddot, thddot] = rhs for the two unknowns.
+# This is linear algebra at ONE instant. No time passes here.
+accel = np.linalg.solve(mass, rhs)
+xddot = accel[0]
+thddot = accel[1]
+
+print("  at theta = 0.2 rad, F = 0:")
+print(f"    xddot  = {xddot:.4f} m/s^2")
+print(f"    thddot = {thddot:.4f} rad/s^2")
+print("  thddot is positive -> it accelerates further over. It falls.")
 
 
 # --- PART 1: same state, same force. Same acceleration? ----------------
@@ -90,7 +100,8 @@ for trial in range(6):
     env.reset(s)                   # the robot's answer
     env.apply_force(F)
     env.step()
-    sim = (env.get_state()[2:] - s[2:]) / dt
+    s_after = env.get_state()
+    sim = (s_after[2:] - s[2:]) / dt      # (v_after - v_before) / dt
 
     mass = np.array([[M + m, m * lc * np.cos(th)],     # our answer
                      [m * lc * np.cos(th), I + m * lc**2]])
@@ -142,8 +153,10 @@ for th0_deg, tag in [(3.0, "small"), (30.0, "large")]:
 
     env.close()
     saved[tag] = (ts, traj)
-    print(f"  theta0 = {th0_deg:4.1f} deg -> max |A-B| ="
-          f" {np.rad2deg(np.abs(a - b).max()):8.4f} deg")
+
+    gap = np.abs(a - b).max()            # biggest angle difference, in rad
+    gap_deg = np.rad2deg(gap)
+    print(f"  theta0 = {th0_deg:4.1f} deg -> max |A-B| = {gap_deg:8.4f} deg")
 
     fig, ax = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
     ax[0].plot(ts, np.rad2deg(a), lw=3.5, alpha=0.35, label="(A) PyBullet")
@@ -184,13 +197,17 @@ for dt in (1 / 240, 1 / 1000, 1 / 4000, 1 / 16000):
     gap = 0.0
 
     for k in range(int(T / dt)):
-        gap = max(gap, abs(env.get_state()[1] - s[1]))
+        th_robot = env.get_state()[1]
+        th_ours = s[1]
+        gap = max(gap, abs(th_robot - th_ours))
+
         env.apply_force(0.0)
         env.step()
         s = rk4_step(s, 0.0, dt, nonlinear_dynamics)
 
     env.close()
-    print(f"  {dt:6.5f} | {np.rad2deg(gap):11.5f}")
+    gap_deg = np.rad2deg(gap)
+    print(f"  {dt:6.5f} | {gap_deg:11.5f}")
 
 print("  -> 0 as dt -> 0: an integration artifact, not a modeling error.")
 
