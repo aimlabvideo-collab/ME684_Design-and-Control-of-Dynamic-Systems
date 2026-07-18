@@ -11,9 +11,10 @@ nav_order: 2
 Control design begins with a **mathematical model** of the plant. This chapter
 develops the theory behind that model: how **Newton's second law** and **energy
 methods (the Lagrangian)** turn physical laws into **differential equations**, why
-and when we may **linearize** a nonlinear model, how the **Laplace transform**
-turns calculus into algebra, what a **transfer function** really represents, and
-how **pole locations** govern stability. Most worked numerical examples live in
+and when we may **linearize** a nonlinear model, how a linear model is written in
+**state-space form**, how the **Laplace transform** turns calculus into algebra,
+what a **transfer function** really represents, and how **pole locations** govern
+stability. Most worked numerical examples live in
 the lecture slides; here we focus on *why* each tool works and *when* it is valid,
 with two fully worked mechanical examples — the **mass–spring–damper** and the
 **cart-pole** — carried through the modeling steps.
@@ -40,6 +41,8 @@ By the end of this chapter you should be able to:
   explain why linearity is so powerful.
 - Justify **linearization** as a Taylor-series approximation about an
   equilibrium point and describe its **region of validity**.
+- Define the **state** of a system, choose a state vector, and write a linearized
+  model in **state-space form** $$\dot x = Ax + Bu$$, $$y = Cx + Du$$.
 - Define the **Laplace transform**, its **region of convergence**, and the
   conditions guaranteeing its existence, and interpret its key properties.
 - Define the **transfer function**, relate it to the **impulse response**, and
@@ -327,10 +330,10 @@ $$l_c = L/2$$ and $$I = mL^2/12$$ (so that $$I + m l_c^2 = mL^2/3$$), while a
 
 **Toward control.** Near the upright equilibrium $$\theta \approx 0$$ we may take
 $$\sin\theta \approx \theta$$, $$\cos\theta \approx 1$$, and drop the
-$$\dot\theta^2$$ term — the linearization of the next section — which turns this
-nonlinear model into an LTI state-space pair $$(A, B)$$. That linear model is
-what the LQR controller in [`simulation/cartpole/`](../simulation/cartpole/) is
-designed on, and we return to it in **state-space** form in Chapter 8.
+$$\dot\theta^2$$ term — the linearization of Section 2.5 — which turns this
+nonlinear model into an LTI state-space pair $$(A, B)$$. Section 2.6 carries that
+step out in full, and the resulting matrices are what the LQR controller in
+[`simulation/cartpole/`](../simulation/cartpole/) is designed on.
 
 ---
 
@@ -380,7 +383,7 @@ method in this course:
 A system is **time-invariant** if delaying the input merely delays the output by
 the same amount: $$x(t) \mapsto y(t)$$ implies $$x(t - T) \mapsto y(t - T)$$.
 Combined with linearity, this is what allows a system to be represented by a
-single, fixed transfer function (Section 2.8) rather than a relationship that
+single, fixed transfer function (Section 2.9) rather than a relationship that
 changes from moment to moment.
 
 ### Recognizing nonlinearity at a glance
@@ -442,9 +445,9 @@ $$
 $$
 
 The partial-derivative matrices $$A$$ and $$B$$ are **Jacobians** evaluated at the
-operating point. This is precisely the state-space model we will design with in
-Chapter 8 — linearization is the bridge from a nonlinear plant to linear
-state-feedback design.
+operating point. This is precisely the **state-space** model of the next section,
+and the one we design with in Chapter 8 — linearization is the bridge from a
+nonlinear plant to linear state-feedback design.
 
 ### What we gain, and what we give up
 
@@ -457,13 +460,207 @@ nonlinear plant yields *different* linear models at different operating points.
 
 ---
 
-## 2.6 Differential-Equation Models
+## 2.6 State-Space Form
+
+Linearization hands us a linear model, but not yet a *standard* one. There are two
+canonical ways to write it down. This section takes the first — collect the
+system's internal variables into a single vector and write one **first-order
+vector** equation. The next section takes the second — eliminate the internal
+variables and relate input to output by a single higher-order scalar equation.
+Both describe the same plant; they differ in what they keep in view.
+
+### What is the "state"?
+
+> The **state** of a system is a minimal set of variables such that knowing them
+> at time $$t_0$$, together with the input for $$t \ge t_0$$, determines the
+> system's entire future behavior.
+
+Two words carry the weight. **Minimal**: drop any one variable and the future is
+no longer determined; add one and it is redundant. **Determines**: the state is a
+complete summary of the past — nothing about how the system arrived at its
+current state matters, only where it is now.
+
+That is why the state variables are the **energy-storage** variables. A mass
+stores kinetic energy through its velocity, a spring potential energy through its
+deflection, a capacitor through its voltage, an inductor through its current. Each
+independent storage element contributes one state, so the **order** $$n$$ counts
+the same elements that set the order of the differential equation in Section 2.7.
+
+### The state vector and the standard form
+
+Stack the state variables into one column,
+
+$$
+x(t) = [\,x_1,\ x_2,\ \cdots,\ x_n\,]^{T},
+$$
+
+and every LTI model can be written as a pair of matrix equations,
+
+$$
+\dot x = A x + B u, \qquad y = C x + D u .
+$$
+
+The first is the **state equation**: it says the rate of change of the state
+depends only on the present state and the present input — never on their history.
+The second is the **output equation**: it selects or combines the states we
+actually measure. The four matrices have names worth learning:
+
+| Symbol | Size | Name | Role |
+|---|---|---|---|
+| $$A$$ | $$n \times n$$ | system (dynamics) matrix | how the system evolves on its own |
+| $$B$$ | $$n \times m$$ | input matrix | how the $$m$$ inputs push the state |
+| $$C$$ | $$p \times n$$ | output matrix | which combinations of state we measure |
+| $$D$$ | $$p \times m$$ | feedthrough matrix | input felt at the output instantly |
+
+For most physical plants $$D = 0$$: an input must act through some energy-storage
+element before it can show up at the output, so the response cannot be
+instantaneous.
+
+One caution. The state vector is **not unique** — any invertible change of
+variables $$\tilde x = T x$$ gives a different but equally valid quadruple
+$$(TAT^{-1},\,TB,\,CT^{-1},\,D)$$ describing the *same* system. What is fixed is
+the number of states $$n$$; the particular coordinates are our choice, and we pick
+whichever ones are physically meaningful.
+
+### Why use it
+
+- **MIMO comes free.** Multiple inputs and outputs are just extra columns of
+  $$B$$ and extra rows of $$C$$. The transfer-function methods of Sections
+  2.9–2.11 handle one input and one output at a time.
+- **Ready for the computer.** $$\dot x = f(x,u)$$ is exactly the form every
+  numerical ODE solver expects, so the model can be simulated as written.
+- **Initial conditions are built in.** The state vector *is* the set of initial
+  conditions; nothing has to be tracked separately.
+- **It is the language of modern control.** Optimal control, observers, and
+  state-feedback design in Chapter 8 all start from $$(A, B, C, D)$$.
+
+### Worked example: the cart-pole in state-space form
+
+Return to the cart-pole of Section 2.3. Near the upright equilibrium
+$$\theta \approx 0$$ we apply Section 2.5: substitute $$\sin\theta \approx \theta$$
+and $$\cos\theta \approx 1$$, and drop $$\dot\theta^{2}$$ as a product of two small
+quantities. The two coupled equations become linear:
+
+$$
+(M+m)\,\ddot p + m l_c \ddot\theta = F,
+$$
+
+$$
+m l_c \ddot p + \big(I + m l_c^{2}\big)\ddot\theta - m g l_c \theta = 0 .
+$$
+
+**Why four states?** Each equation is second order, and each second-order equation
+needs a position *and* a velocity to pin down its future. Two coordinates
+$$(p, \theta)$$ therefore give $$n = 4$$ — which is also the count of independent
+energy-storage modes: cart kinetic, pole kinetic, pole rotational, and pole
+gravitational.
+
+**Define the state.** Take positions first, then velocities, with the cart force
+as the single input:
+
+$$
+x_1 = p, \quad x_2 = \theta, \quad x_3 = \dot p, \quad x_4 = \dot\theta,
+\qquad u = F,
+$$
+
+so that $$x = [\,p,\ \theta,\ \dot p,\ \dot\theta\,]^{T}$$.
+
+**Two rows are free.** The definitions themselves supply half the state equation —
+these are kinematic identities, not dynamics:
+
+$$
+\dot x_1 = x_3, \qquad \dot x_2 = x_4 .
+$$
+
+The remaining two rows, $$\dot x_3 = \ddot p$$ and $$\dot x_4 = \ddot\theta$$, are
+where the physics lives; we must solve the linearized equations for the
+accelerations.
+
+**Solve for the accelerations.** Collect them on the left:
+
+<p align="center">
+  <img src="../figures/ch2/eq_ss_linmatrix.png"
+       alt="2x2 mass matrix times [p-ddot; theta-ddot] equals [F; m g l_c theta]"
+       width="360" style="max-width:100%; height:auto;">
+</p>
+
+The $$2 \times 2$$ block is the linearized inertia matrix, so inverting it solves
+the pair at once:
+
+<div style="overflow-x:auto; text-align:center;">
+  <img src="../figures/ch2/eq_ss_massinv.png"
+       alt="Inverse of the 2x2 mass matrix equals 1 over D times the adjugate matrix"
+       width="640" style="max-width:100%; height:auto;">
+</div>
+
+$$
+D = (M+m)\big(I + m l_c^{2}\big) - (m l_c)^{2} .
+$$
+
+Carrying out the multiplication,
+
+$$
+\ddot p = \frac{\big(I + m l_c^{2}\big)F - m^{2} g l_c^{2}\,\theta}{D},
+\qquad
+\ddot\theta = \frac{(M+m)\,m g l_c\,\theta - m l_c F}{D}.
+$$
+
+**Read off the matrices.** Both accelerations are linear in $$x_2 = \theta$$ and
+$$u = F$$ alone — no other state appears — so the state equation is
+
+<div style="overflow-x:auto; text-align:center;">
+  <img src="../figures/ch2/eq_ss_AB.png"
+       alt="A as a 4x4 matrix with ones and a1, a2; B as a 4x1 column with b1 and b2"
+       width="560" style="max-width:100%; height:auto;">
+</div>
+
+where
+
+$$
+a_1 = \frac{-m^{2} g l_c^{2}}{D}, \quad
+a_2 = \frac{(M+m)\,m g l_c}{D}, \quad
+b_1 = \frac{I + m l_c^{2}}{D}, \quad
+b_2 = \frac{-m l_c}{D}.
+$$
+
+If we measure only the cart position and the pole angle — the two quantities a
+real rig can sense directly — then
+
+<div style="overflow-x:auto; text-align:center;">
+  <img src="../figures/ch2/eq_ss_CD.png"
+       alt="C as a 2x4 matrix selecting the first two states, and a zero feedthrough column"
+       width="520" style="max-width:100%; height:auto;">
+</div>
+
+writing $$D_{\text{ft}}$$ for the feedthrough matrix to keep it distinct from the
+determinant $$D$$ above.
+
+**A reading of the answer.** Note that $$D > 0$$ and hence $$a_2 > 0$$, so with no
+input the pole obeys $$\ddot\theta \approx a_2\theta$$ — a positive feedback of
+angle onto angular acceleration. Lean the pole and it accelerates *further* over.
+The upright equilibrium is unstable, and no choice of coordinates hides that; it
+is a property of $$A$$ itself. Chapter 8 makes this precise through the
+eigenvalues of $$A$$ and then designs the state feedback $$u = -Kx$$ that
+stabilizes it — the LQR controller running in
+[`simulation/cartpole/`](../simulation/cartpole/) is exactly that design applied
+to these matrices.
+
+> **Scope.** This section only puts a model *into* state-space form. Analyzing it
+> — eigenvalues and modes, controllability and observability, converting between
+> $$(A,B,C,D)$$ and a transfer function, and designing feedback — is the subject
+> of Chapter 8.
+
+---
+
+## 2.7 Differential-Equation Models
 
 Newton's law (Section 2.2) and the Lagrangian (Section 2.3) both deliver
 differential equations, and linearization (Section 2.5) guarantees they can be
-made **linear** near an operating point. Whatever its physical origin, every such
-linear, time-invariant model can then be written in one **standard form** — and
-it is that common form the transform tools of the coming sections act on.
+made **linear** near an operating point. Section 2.6 took one route from there —
+keep the internal variables and write a first-order vector equation. This section
+takes the other: **eliminate** the internal variables and relate the input
+directly to the output through a single scalar equation of higher order. That
+input–output form is what the transform tools of the coming sections act on.
 
 An $$n$$th-order LTI system relating input $$r(t)$$ to output $$y(t)$$ is
 
@@ -484,7 +681,7 @@ into a power $$s^k$$, collapsing this differential equation into an algebraic on
 
 ---
 
-## 2.7 The Laplace Transform
+## 2.8 The Laplace Transform
 
 ### Why transform at all
 
@@ -553,7 +750,7 @@ The power of the method is in a handful of properties:
 *The **final-value theorem** is valid only when $$sF(s)$$ has all its poles in the
 open left half-plane; otherwise the time limit does not exist and the formula is
 meaningless. This caveat is itself a stability statement — a preview of
-Section 2.9.
+Section 2.10.
 
 Notice how the differentiation property threads the **initial conditions**
 $$f(0), \dot f(0)$$ into the algebra. Transfer functions adopt the convention of
@@ -563,7 +760,7 @@ multiplication.
 
 ---
 
-## 2.8 Transfer Functions, Poles, and Zeros
+## 2.9 Transfer Functions, Poles, and Zeros
 
 ### Definition and meaning
 
@@ -615,7 +812,7 @@ poles in the complex plane *is* the time behavior.
 
 ---
 
-## 2.9 Stability and the s-Plane
+## 2.10 Stability and the s-Plane
 
 ### BIBO stability
 
@@ -660,7 +857,7 @@ before any inversion is done.
 
 ---
 
-## 2.10 Electromechanical Coupling (DC Motor)
+## 2.11 Electromechanical Coupling (DC Motor)
 
 Many course plants — including the cart-pole and DC-motor simulations in
 [`simulation/`](../simulation/) — are **electromechanical**: an electrical
@@ -693,7 +890,7 @@ why a simple DC motor is so easy to control.
 
 ---
 
-## 2.11 Block-Diagram Models
+## 2.12 Block-Diagram Models
 
 ### Diagrams as an algebra
 
@@ -737,7 +934,8 @@ $$G(s)H(s)$$ directly.
 | Newton's law | free-body diagram | sum of forces $$= M\ddot y$$ gives the ODE |
 | Energy methods | Lagrangian $$L = T - V$$ | $$M(q)\ddot q + C\dot q + g = \tau$$, no constraint forces |
 | Nonlinear → linear | Taylor / Jacobian | tangent model valid near an equilibrium |
-| Standard form | $$n$$th-order LTI ODE | order $$=$$ number of energy-storage elements |
+| State form | $$\dot x = Ax + Bu$$ | $$n$$ first-order equations; MIMO and simulation-ready |
+| Input–output form | $$n$$th-order LTI ODE | order $$=$$ number of energy-storage elements |
 | Time → frequency | Laplace transform | calculus becomes algebra in $$s$$ |
 | Input–output | transfer function $$G(s)$$ | the transformed impulse response |
 | Behavior | poles & zeros | poles are natural modes $$e^{pt}$$ |
@@ -751,5 +949,5 @@ $$G(s)H(s)$$ directly.
 
 > **Looking ahead.** With a plant reduced to a transfer function and its poles,
 > Chapter 4 reads the *time response* directly from pole locations, Chapter 5
-> tests *stability* algebraically, and Chapter 8 returns to these same physical
-> systems in **state-space** form.
+> tests *stability* algebraically, and Chapter 8 picks the **state-space** models
+> of Section 2.6 back up to design feedback with them directly.
