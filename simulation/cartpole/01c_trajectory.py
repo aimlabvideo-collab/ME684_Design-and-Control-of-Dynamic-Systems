@@ -18,6 +18,7 @@ A plot window opens -- close it to continue.
 Next: 01d_replay.py shows the motion in 3D.
 """
 
+import time                          # to pace the viewer at a watchable speed
 import numpy as np                   # arrays and math
 import matplotlib.pyplot as plt      # the plots
 
@@ -29,18 +30,29 @@ from cartpole_env import CartPole, rk4_step, nonlinear_dynamics
 # --- free fall, both at once -------------------------------------------
 # Both are advanced inside ONE loop, so they always sit at the same time.
 #
-#   T  = 1 s     3 deg grows to about 75 deg in that time -- a big fall,
-#                but still short of going over. Past ~1.5 s the pole has
-#                swung right around and comparing angles stops meaning
-#                anything.
-#   dt = 1 ms    1000 steps. Same step size as 01b.
+#   T  = how many seconds of motion to simulate
+#   dt = 1 ms, the same step size 01b probes with
+#
+# There is no friction anywhere -- PyBullet's damping is switched off and our
+# equations have no such term -- so the pole never settles. It swings down
+# past the bottom, climbs the far side to the same height it started from,
+# and comes back. A pendulum, not a fall.
 
 print("free fall")
-T = 1.0
+T = 100.0
 dt = 1.0 / 1000.0
 n = int(T / dt)
 
-th0_deg = 3.0
+# SPEED sets how fast the 3D window plays: 1.0 is real time, 0.25 is quarter
+# speed, and a big number just runs flat out with no waiting at all.
+#
+# Note we cannot pace this with a plain time.sleep(dt) per step. Windows
+# rounds a sleep up to roughly 12 ms, so 1 ms sleeps would run the viewer
+# about 12x too SLOW. Instead we check the wall clock each step and wait
+# only for however long we are actually ahead.
+SPEED = 1.0
+
+th0_deg = 20.0
 s0 = np.array([0.0, np.deg2rad(th0_deg), 0.0, 0.0])
 
 env = CartPole(gui=True, dt=dt)     # (A) the robot
@@ -51,6 +63,8 @@ ts = np.zeros(n)
 a = np.zeros(n)                      # (A) angle history
 b = np.zeros(n)                      # (B) angle history
 
+t_start = time.perf_counter()
+
 for k in range(n):
     ts[k] = k * dt                   # record both right now
     a[k] = env.get_state()[1]
@@ -59,6 +73,11 @@ for k in range(n):
     env.apply_force(0.0)             # advance the robot, F = 0
     env.step()
     s = rk4_step(s, 0.0, dt, nonlinear_dynamics)   # advance our model
+
+    # wait until the wall clock catches up with the simulated time
+    ahead = (k + 1) * dt / SPEED - (time.perf_counter() - t_start)
+    if ahead > 0:
+        time.sleep(ahead)
 
 env.close()
 
