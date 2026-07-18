@@ -14,8 +14,8 @@ approximation anyway, so nothing about it degrades as the angle grows.
 
     python 01c_trajectory.py
 
-A plot window opens -- close it to continue.
-Next: 01d_replay.py shows the motion in 3D.
+The 3D window plays the fall in real time, then a plot window opens --
+close it to continue.
 """
 
 import time                          # to pace the viewer at a watchable speed
@@ -39,7 +39,7 @@ from cartpole_env import CartPole, rk4_step, nonlinear_dynamics
 # and comes back. A pendulum, not a fall.
 
 print("free fall")
-T = 100.0
+T = 5.0
 dt = 1.0 / 1000.0
 n = int(T / dt)
 

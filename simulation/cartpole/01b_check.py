@@ -20,8 +20,7 @@ Next: 01c_trajectory.py runs both forward in time.
 import numpy as np                   # arrays, sin/cos, the matrix solve
 
 # CartPole wraps the PyBullet simulator. You do not need to read
-# cartpole_env.py to follow this lab -- see 00_pybullet_intro.py if you
-# want to know how a robot gets loaded into the simulator.
+# cartpole_env.py to follow this lab.
 from cartpole_env import CartPole, G, M_CART, M_POLE, LC, I_POLE
 
 M, m, lc, I = M_CART, M_POLE, LC, I_POLE

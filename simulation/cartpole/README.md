@@ -76,7 +76,6 @@ ME 684/
 ├── 01a_equations.py         Lab 1a: type our equations in, solve at a point
 ├── 01b_check.py             Lab 1b: do they match the robot?
 ├── 01c_trajectory.py        Lab 1c: run both forward in time
-├── 01d_replay.py            Lab 1d: watch our own equations move
 │                           (Lab 1e, the linear model, is your assignment)
 ├── 02_open_loop.py          Lab 2: inputs chosen in advance all fail
 ├── 03_keyboard_balance.py   Lab 3: you close the loop
@@ -108,11 +107,10 @@ derivation wrong. `assets/cartpole.urdf` fixes the inertias.
 ```bash
 python 01a_equations.py     # our equations, solved at one instant
 python 01b_check.py         # ... and are they right?
-python 01c_trajectory.py    # run both forward, two plot windows
-python 01d_replay.py        # 3D replay of our own trajectory
+python 01c_trajectory.py    # run both forward, watch it in 3D
 ```
 
-Four short files, run in order. Each one stands alone and reads top to
+Three short files, run in order. Each one stands alone and reads top to
 bottom -- there are no functions to jump to and no shared state between
 them.
 
@@ -160,13 +158,9 @@ Quartering `dt` quarters the gap — heading to zero. A numerical artifact, not 
 modeling error — and a distinction worth keeping, because Lab 1e produces an
 error that looks just like this one in a table and behaves nothing like it.
 
-**01d** replays the trajectory **we computed** in the PyBullet viewer. Nothing
-is being simulated: each frame is a state our own equations produced, pushed
-into the renderer. The robot on screen is being driven by your algebra.
-
 ### Lab 1e — the linear model *(assignment)*
 
-Labs 1a-1d stopped at the nonlinear equations. Chapter 3 needs the **linearized**
+Labs 1a-1c stopped at the nonlinear equations. Chapter 3 needs the **linearized**
 model, and getting there means deliberately throwing information away:
 
 > Linearize about the upright equilibrium by hand — `sin θ → θ`, `cos θ → 1`,
