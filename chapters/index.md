@@ -10,7 +10,7 @@ Detailed notes for each topic. Use the sidebar (or the list below) to navigate.
 
 1. [Introduction & Dynamic System Modeling](ch1-introduction.md)
 2. [Mathematical Models & Laplace Transforms](ch2-mathematical-models.md)
-3. [Transfer Functions & Block Diagrams](ch3-transfer-functions.md)
+3. [Characteristics of Feedback Control Systems](ch3-feedback-control.md)
 4. [Time-Domain Response & Performance](ch4-time-response.md)
 5. [Stability & Routh–Hurwitz](ch5-stability.md)
 6. [Root Locus Design](ch6-root-locus.md)

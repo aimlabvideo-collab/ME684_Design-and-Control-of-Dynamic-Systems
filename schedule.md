@@ -12,7 +12,7 @@ nav_order: 2
 |------|------|-------|-------|--------|------------|
 | 1  | TBD | Introduction & Dynamic System Modeling | [Ch 1](chapters/ch1-introduction.md) | [PDF](slides/) | |
 | 2  | TBD | Mathematical Models & Laplace Transforms | [Ch 2](chapters/ch2-mathematical-models.md) | [PDF](slides/) | HW1 |
-| 3  | TBD | Transfer Functions & Block Diagrams | [Ch 3](chapters/ch3-transfer-functions.md) | [PDF](slides/) | |
+| 3  | TBD | Characteristics of Feedback Control Systems | [Ch 3](chapters/ch3-feedback-control.md) | [PDF](slides/) | |
 | 4  | TBD | Time-Domain Response & Performance | [Ch 4](chapters/ch4-time-response.md) | [PDF](slides/) | HW2 |
 | 5  | TBD | Stability & Routh–Hurwitz | [Ch 5](chapters/ch5-stability.md) | [PDF](slides/) | |
 | 6  | TBD | Stability (cont.) / Review | [Ch 5](chapters/ch5-stability.md) | [PDF](slides/) | Midterm 1 |
