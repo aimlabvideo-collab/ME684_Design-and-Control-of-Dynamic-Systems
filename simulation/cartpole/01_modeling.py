@@ -25,19 +25,16 @@ part opens the 3D viewer.
 """
 
 import time                          # time.sleep, to pace the 3D replay
-from pathlib import Path             # to build the results/ path safely
 import numpy as np                   # arrays, sin/cos, the matrix solve
 import matplotlib.pyplot as plt      # the plots
 
-# Plumbing. You do not need to read cartpole_env.py to follow this lab.
+# Bring some parameters and custom functions from the environment. 
+# You do not need to read cartpole_env.py to follow this lab.
 #   nonlinear_dynamics(s, F) -> sdot   is the matrix solve of PART 0
-#   rk4_step(s, F, dt, dyn)  -> s_next is one Runge-Kutta step
+#   rk4_step(s, F, dt, dyn)  -> s_next is one Runge-Kutta step (Numerical integration)
 from cartpole_env import (
     CartPole, rk4_step, nonlinear_dynamics, G, M_CART, M_POLE, LC, I_POLE,
 )
-
-RESULTS = Path(__file__).parent / "results"
-RESULTS.mkdir(exist_ok=True)
 
 # Short names, so the formulas below look like the ones on the board.
 M, m, lc, I = M_CART, M_POLE, LC, I_POLE
@@ -168,7 +165,6 @@ for th0_deg, tag in [(3.0, "small"), (30.0, "large")]:
     for x in ax:
         x.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(RESULTS / f"01_nonlinear_{tag}.png", dpi=120)
     plt.show()                     # close the window to continue
     plt.close(fig)
 
