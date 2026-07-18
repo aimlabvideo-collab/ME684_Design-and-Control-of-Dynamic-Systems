@@ -103,8 +103,7 @@ derivation wrong. `assets/cartpole.urdf` fixes the inertias.
 ## 3. Lab 1 — Mathematical modeling
 
 ```bash
-python 01_modeling.py           # plots, then a PyBullet replay
-python 01_modeling.py --save    # headless, writes PNGs to results/
+python 01_modeling.py    # plots, then a PyBullet replay
 ```
 
 Compares two things:
@@ -313,7 +312,8 @@ your equations have no such term — `cartpole_env.py` zeroes it via
 `changeDynamics`. (2) The URDF inertias are placeholders; see §2.
 
 **Plots do not appear.**
-Any script takes `--save` to run headless and write PNGs to `results/` instead.
+`02_open_loop.py` and `03_keyboard_balance.py` take `--save` to run headless and
+write PNGs to `results/` instead. `01_modeling.py` always shows its windows.
 
 ---
 

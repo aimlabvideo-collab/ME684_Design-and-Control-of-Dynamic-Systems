@@ -18,21 +18,16 @@ Read top to bottom. No functions, five parts, in the order they print.
                                               theta angle from upright [rad]
     input  F = force on the cart [N]
 
-    python 01_modeling.py           # plots, then a PyBullet replay
-    python 01_modeling.py --save    # write PNGs only, no windows
+    python 01_modeling.py
+
+Two plot windows open along the way -- close each one to continue. The last
+part opens the 3D viewer.
 """
 
-import sys
-import time
-from pathlib import Path
-
-import numpy as np
-import matplotlib
-
-SAVE = "--save" in sys.argv
-if SAVE:
-    matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import time                          # time.sleep, to pace the 3D replay
+from pathlib import Path             # to build the results/ path safely
+import numpy as np                   # arrays, sin/cos, the matrix solve
+import matplotlib.pyplot as plt      # the plots
 
 # Plumbing. You do not need to read cartpole_env.py to follow this lab.
 #   nonlinear_dynamics(s, F) -> sdot   is the matrix solve of PART 0
@@ -70,7 +65,7 @@ rhs = np.array([0.0 + m * lc * np.sin(th) * thd**2,
 
 # Solve mass * [xddot, thddot] = rhs for the two unknowns.
 # This is linear algebra at ONE instant. No time passes here.
-accel = np.linalg.solve(mass, rhs)
+accel = np.linalg.solve(mass, rhs) # the solution 'accel' is the left hand side vector in the equation
 xddot = accel[0]
 thddot = accel[1]
 
@@ -174,8 +169,7 @@ for th0_deg, tag in [(3.0, "small"), (30.0, "large")]:
         x.grid(alpha=0.3)
     fig.tight_layout()
     fig.savefig(RESULTS / f"01_nonlinear_{tag}.png", dpi=120)
-    if not SAVE:
-        plt.show()
+    plt.show()                     # close the window to continue
     plt.close(fig)
 
 
@@ -217,17 +211,16 @@ print("  -> 0 as dt -> 0: an integration artifact, not a modeling error.")
 # and now we just push each state into the viewer, one frame at a time.
 # The robot on screen is being driven by our algebra.
 
-if not SAVE:
-    print("\nPART 4.  replaying our own trajectory (close the window to end)")
-    ts, traj = saved["large"]
-    env = CartPole(gui=True, dt=1.0 / 2000.0)
+print("\nPART 4.  replaying our own trajectory")
+ts, traj = saved["large"]
+env = CartPole(gui=True, dt=1.0 / 2000.0)
 
-    for k in range(0, len(traj), 8):       # every 8th frame ~ 250 fps of data
-        env.reset(traj[k])                 # <-- our numbers, not PyBullet's
-        time.sleep(8 / 2000.0)
+for k in range(0, len(traj), 8):       # every 8th frame ~ 250 fps of data
+    env.reset(traj[k])                 # <-- our numbers, not PyBullet's
+    time.sleep(8 / 2000.0)
 
-    time.sleep(1.0)
-    env.close()
+time.sleep(1.0)
+env.close()
 
 print("\nOur equations reproduce the robot. Chapter 3 builds controllers on")
 print("a LINEARIZED version of them -- that is the next lab's job.")
