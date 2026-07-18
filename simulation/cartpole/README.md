@@ -207,10 +207,7 @@ you actually have, and a function of `t` alone has no way of knowing it.
 ## 5. Lab 3 — You are the controller
 
 ```bash
-python 03_keyboard_balance.py                 # 1/3 speed (default)
-python 03_keyboard_balance.py --slow 1        # real time. good luck
-python 03_keyboard_balance.py --force 10      # stronger push — and harder
-python 03_keyboard_balance.py --auto --watch  # a robot plays; nice for lecture
+python 03_keyboard_balance.py
 ```
 
 | key | |
@@ -218,75 +215,50 @@ python 03_keyboard_balance.py --auto --watch  # a robot plays; nice for lecture
 | **←** | push the cart left (`F < 0`) |
 | **→** | push the cart right (`F > 0`) |
 | **r** | reset |
-| **q** | quit and analyze |
+| **q** | quit and see the plots |
 
 > Click on the PyBullet window first, or it will not see your keys.
 
 **On difficulty.** The unstable pole sits at +3.97 rad/s — a 0.25 s time
 constant — and human reaction time is about 0.2 s. In real time this is close to
-impossible, which is why the sim runs at **1/3 speed** by default. Run
-`--auto` to see it: a simulated operator with a 0.2 s reaction delay lasts about
-**10 s at 1/3 speed** and **under 1 s at full speed**.
+impossible, which is why the script runs at **1/3 speed**. Edit `SPEED = 1.0`
+near the top once you can hold it at a third, and feel how much of the task was
+the delay rather than the physics.
 
-**A counterintuitive one to try in class:** `--force 20` is *harder* than the
-default `--force 5`. With a reaction delay, a bigger push overshoots. Larger gain
-is not better gain — a fact Chapter 3 will make precise.
+`FORCE` is worth an experiment too. Raising it makes the lab **harder**, not
+easier: with a reaction delay, a bigger push overshoots. Larger gain is not
+better gain — a fact Chapter 3 will make precise.
 
 ### The reveal
 
-Press `q` and the script analyzes every key you pressed against the state of the
-pole at that instant.
+Press `q` and two plots come up. The second is the one that matters: the force
+**you** applied against the angle you were looking at.
 
-First, the sign. You pressed **RIGHT** when the pole leaned **right**. You were
-not choosing an input; you were choosing a *sign*, and the sign came from how far
-the pole was from where you wanted it:
+An arrow key is all-or-nothing, so the plot is two bands rather than a line. But
+notice which band sits on which side. Positive angle, positive force — you
+pushed *toward* the lean, essentially every time, without being told to. The
+script prints the percentage.
+
+That is feedback, and it is the whole reason you could do what no open-loop
+input in Lab 2 could:
 
 ```
 error   e = θ − θ_desired = θ            (upright ⇒ θ_desired = 0)
 ```
 
-That is feedback, and it is the whole reason you could do what no open-loop input
-in Lab 2 could.
-
-Then the script fits your control law — and there is a trap here worth showing
-students explicitly. The obvious move is to check your key against the error
-*right now*. Don't: this is a **closed loop**, and the pole leans the way it
-leans partly *because* of the key you are holding. Correlating the two is
-circular, and the naive fit confidently reports that you used no derivative term
-at all. The honest question is which **past** state explains the present key —
-you cannot react to what you have not seen yet. Sweeping over reaction delay `d`
-recovers it:
+Chapter 3 keeps the idea and drops the all-or-nothing part, pushing in
+proportion to the error instead so it can act gently near upright:
 
 ```
-u = F · sign( e(t−d) + τ · ė(t−d) )
-
-    d   =  67 ms      your reaction delay
-    τ   = 0.14 s      how far ahead you were looking
-    → reproduces 92.5% of your keys      (naive fit: 85.9%)
+F = −K · e
 ```
-
-`τ > 0`. You were not reacting to the error alone but to how fast it was growing
-— leading the pole rather than chasing it. With a 0.2 s delay against a 0.25 s
-instability, chasing is not enough.
-
-```
-u = k_p · e  +  k_d · ė              k_d/k_p = τ
-```
-
-The `e` term is proportional feedback: *how wrong am I now.* The `ė` term is
-derivative feedback: *where is the error headed.* You have been running a PD
-controller with your fingers.
-
-`results/03_human_policy.png` draws it: your keypresses in the (`e`, `ė`) phase
-plane, split cleanly by a straight line through the origin. That line is your
-controller.
 
 ### One more thing to notice
 
-Watch how the automatic operator fails. Often it does not drop the pole at all —
-the **cart runs off the rail** while the pole stays vertical. A controller that
-only watches `θ` has nothing to say about `x`. Holding the pole up and keeping
-the cart in place are two objectives, and there is only one actuator.
+Watch *how* you lose. Often the pole never drops at all — the **cart runs off**
+while the pole stays vertical. You were watching `θ` and nothing was watching
+`x`. Holding the pole up and keeping the cart in place are two objectives, and
+there is only one actuator.
 
 That is where Chapter 3 begins.
 
@@ -324,8 +296,8 @@ your equations have no such term — `cartpole_env.py` zeroes it via
 `changeDynamics`. (2) The URDF inertias are placeholders; see §2.
 
 **Plots do not appear.**
-`02_open_loop.py` and `03_keyboard_balance.py` take `--save` to run headless and
-write PNGs to `results/` instead. The Lab 1 files always show their windows.
+`02_open_loop.py` takes `--save` to run headless and write PNGs to `results/`.
+The other labs always show their windows.
 
 ---
 
