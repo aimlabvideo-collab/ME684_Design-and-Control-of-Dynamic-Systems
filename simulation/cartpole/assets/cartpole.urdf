@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!--
+  ME 684 - cart-pole model
+  Adapted from pybullet_data/cartpole.urdf
+
+  Why not just use the stock URDF? Because every link in it carries a
+  placeholder inertia tensor, ixx = iyy = izz = 1.0. For the pole
+  (m = 0.1 kg, L = 1 m) the true inertia about the hinge axis is
+
+      I_yy = m(L^2 + w^2)/12 = 0.1*(1.0^2 + 0.05^2)/12 = 0.00835417
+
+  which is about 120x smaller than the placeholder. With the stock file the
+  (A, B) matrices you derive on the board do not match the simulator, and the
+  whole point of Chapter 2 collapses. Every inertia below is computed from the
+  uniform-rectangular-box formula.
+-->
+<robot name="cartpole">
+
+  <!-- The rail the cart slides along. Fixed base, so its mass/inertia are unused. -->
+  <link name="slideBar">
+    <visual>
+      <geometry>
+        <box size="30 0.05 0.05"/>
+      </geometry>
+      <origin xyz="0 0 0"/>
+      <material name="rail">
+        <color rgba="0 0.8 0.8 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+
+  <!-- Cart: 0.5 x 0.5 x 0.2 box, M = 1.0 kg -->
+  <link name="cart">
+    <visual>
+      <geometry>
+        <box size="0.5 0.5 0.2"/>
+      </geometry>
+      <origin xyz="0 0 0"/>
+      <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.5 0.5 0.2"/>
+      </geometry>
+      <origin xyz="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <!-- ixx = M(y^2+z^2)/12, iyy = M(x^2+z^2)/12, izz = M(x^2+y^2)/12 -->
+      <inertia ixx="0.0241667" ixy="0" ixz="0"
+               iyy="0.0241667" iyz="0"
+               izz="0.0416667"/>
+    </inertial>
+  </link>
+
+  <joint name="slider_to_cart" type="prismatic">
+    <axis xyz="1 0 0"/>
+    <origin xyz="0 0 0"/>
+    <parent link="slideBar"/>
+    <child link="cart"/>
+    <limit effort="1000.0" lower="-15" upper="15" velocity="50"/>
+  </joint>
+
+  <!-- Pole: 0.05 x 0.05 x 1.0 box, m = 0.1 kg, COM is 0.5 m from the hinge -->
+  <link name="pole">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 1.0"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.5"/>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.05 1.0"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.5"/>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.5"/>
+      <mass value="0.1"/>
+      <!-- iyy = m(w^2 + L^2)/12 = 0.00835417   <- the axis the controller sees -->
+      <inertia ixx="0.00835417" ixy="0" ixz="0"
+               iyy="0.00835417" iyz="0"
+               izz="0.00004167"/>
+    </inertial>
+  </link>
+
+  <!-- Rotation axis +y. The pole's local +z (up) tips toward +x, so theta > 0
+       means the pole leans to the right. -->
+  <joint name="cart_to_pole" type="continuous">
+    <axis xyz="0 1 0"/>
+    <origin xyz="0 0 0"/>
+    <parent link="cart"/>
+    <child link="pole"/>
+  </joint>
+
+</robot>

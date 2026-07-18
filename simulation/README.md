@@ -1,15 +1,15 @@
 # Simulation
 
-Control simulations used in lecture, in both **MATLAB** and **Python**.
+Control simulations used in lecture, written in **Python**.
 
 | Folder | Topic |
 |--------|-------|
-| [`cartpole/`](cartpole/) | Cart-pole balancing with LQR state feedback (state-space design, Ch 8–9) |
+| [`cartpole/`](cartpole/) | Cart-pole modeling lab in PyBullet — derive the equations of motion, test open-loop inputs, then balance it by hand (Ch 2) |
 
 Each folder has its own README with details and how to run it.
 
-MATLAB examples use the Control System Toolbox. Python examples use
-`numpy` / `scipy` / `matplotlib`, and the 3-D physics view uses **PyBullet**.
+The examples use `numpy` / `scipy` / `matplotlib`, and the 3-D physics view uses
+**PyBullet**.
 
 ---
 
@@ -115,11 +115,12 @@ If the window appears and closes cleanly, **you are done.** If not, see
 
 ```bash
 cd cartpole
-python cartpole_pybullet.py
+python 01_modeling.py
 ```
 
-See [`cartpole/README.md`](cartpole/) for what each file does and the expected
-result.
+The cart-pole lab runs in three stages — `01_modeling.py`, `02_open_loop.py`,
+`03_keyboard_balance.py`. See [`cartpole/README.md`](cartpole/) for what each
+one does, the expected output, and the questions to answer as you go.
 
 ---
 

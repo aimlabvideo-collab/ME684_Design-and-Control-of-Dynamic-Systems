@@ -247,7 +247,8 @@ $$
 $$
 
 is exactly the computation a physics engine performs at every timestep. A
-simulator such as **PyBullet** (used in [`simulation/`](../simulation/)) is
+simulator such as **PyBullet** (used in the
+[cart-pole lab](../simulation/cartpole/)) is
 handed only a description of the bodies and joints — masses, inertias, and how
 the links connect — from which it *assembles* $$M$$, $$C$$, and $$g$$ internally
 and integrates this equation forward. You never hand it the equations of motion;
@@ -332,8 +333,9 @@ $$l_c = L/2$$ and $$I = mL^2/12$$ (so that $$I + m l_c^2 = mL^2/3$$), while a
 $$\sin\theta \approx \theta$$, $$\cos\theta \approx 1$$, and drop the
 $$\dot\theta^2$$ term — the linearization of Section 2.5 — which turns this
 nonlinear model into an LTI state-space pair $$(A, B)$$. Section 2.6 carries that
-step out in full, and the resulting matrices are what the LQR controller in
-[`simulation/cartpole/`](../simulation/cartpole/) is designed on.
+step out in full. The cart-pole lab in
+[`simulation/cartpole/`](../simulation/cartpole/) checks the equations derived
+here against a physics engine that never saw them.
 
 ---
 
@@ -640,10 +642,7 @@ input the pole obeys $$\ddot\theta \approx a_2\theta$$ — a positive feedback o
 angle onto angular acceleration. Lean the pole and it accelerates *further* over.
 The upright equilibrium is unstable, and no choice of coordinates hides that; it
 is a property of $$A$$ itself. Chapter 8 makes this precise through the
-eigenvalues of $$A$$ and then designs the state feedback $$u = -Kx$$ that
-stabilizes it — the LQR controller running in
-[`simulation/cartpole/`](../simulation/cartpole/) is exactly that design applied
-to these matrices.
+eigenvalues of $$A$$ and then designs a state feedback that stabilizes it.
 
 > **Scope.** This section only puts a model *into* state-space form. Analyzing it
 > — eigenvalues and modes, controllability and observability, converting between
@@ -859,8 +858,9 @@ before any inversion is done.
 
 ## 2.11 Electromechanical Coupling (DC Motor)
 
-Many course plants — including the cart-pole and DC-motor simulations in
-[`simulation/`](../simulation/) — are **electromechanical**: an electrical
+Many course plants — including the cart-pole of
+[`simulation/cartpole/`](../simulation/cartpole/), once a motor drives the cart —
+are **electromechanical**: an electrical
 subsystem drives a mechanical one through a coupling law. The DC motor is the
 canonical case, and it illustrates how two element models combine into one
 transfer function without us solving a specific numeric example.
@@ -945,7 +945,7 @@ $$G(s)H(s)$$ directly.
 ## Course Materials
 - 📊 Slides: [chapter2_mathematical_models](../slides/) — worked examples and derivations
 - 📝 Examples: [Examples](../examples/)
-- 💻 Simulation: [DC-motor & cart-pole code](../simulation/)
+- 💻 Simulation: [Cart-pole modeling lab](../simulation/cartpole/) — derive, verify against PyBullet, then balance it by hand
 
 > **Looking ahead.** With a plant reduced to a transfer function and its poles,
 > Chapter 4 reads the *time response* directly from pole locations, Chapter 5
