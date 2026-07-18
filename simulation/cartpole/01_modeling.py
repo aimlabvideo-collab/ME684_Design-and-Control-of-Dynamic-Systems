@@ -90,22 +90,65 @@ rng = np.random.default_rng(0)     # fixed seed: everyone sees these numbers
 worst = 0.0
 
 for trial in range(6):
-    s = rng.uniform(-0.4, 0.4, 4)  # big angles, to exercise the sin/cos
-    F = rng.uniform(-8, 8)
-    th, thd = s[1], s[3]
 
-    env.reset(s)                   # the robot's answer
+    # ============================================================
+    #  THE QUESTION
+    # ============================================================
+    # Make up a random state and a random force. Big angles on
+    # purpose: at theta = 0, sin(theta) = 0 would delete whole terms
+    # from our equations and a mistake in them could pass unnoticed.
+
+    s = rng.uniform(-0.4, 0.4, 4)      # [x, theta, xdot, thetadot]
+    F = rng.uniform(-8, 8)             # force on the cart [N]
+    th, thd = s[1], s[3]               # the two we need below
+
+    # ============================================================
+    #  ANSWER 1 -- PyBullet, the 'real robot'
+    # ============================================================
+    # Four calls, and each one matters:
+    #
+    #  env.reset(s)       Teleport. Writes theta and thetadot into
+    #                     the joints directly. No physics runs here;
+    #                     we are just placing the robot at the exact
+    #                     state we want to ask about.
+    #
+    #  env.apply_force(F) Queue a force on the CART joint. PyBullet
+    #                     clears applied forces after every step, so
+    #                     it has to be re-applied each time -- and the
+    #                     POLE joint gets nothing, because the pole
+    #                     has no motor. That is the underactuation.
+    #
+    #  env.step()         Run the engine for exactly dt seconds.
+    #
+    #  env.get_state()    Read the joints back out.
+    #
+    # PyBullet never reports acceleration, only position and
+    # velocity, so we recover it from how much the velocity changed.
+
+    env.reset(s)
     env.apply_force(F)
     env.step()
     s_after = env.get_state()
-    sim = (s_after[2:] - s[2:]) / dt      # (v_after - v_before) / dt
 
-    mass = np.array([[M + m, m * lc * np.cos(th)],     # our answer
+    v_before = s[2:]                   # [xdot, thetadot] before
+    v_after = s_after[2:]              # [xdot, thetadot] after
+    sim = (v_after - v_before) / dt    # [xddot, thddot]
+
+    # ============================================================
+    #  ANSWER 2 -- our equations, from the board
+    # ============================================================
+    # The same matrix as PART 0, now with F in the top row. Nothing
+    # here knows PyBullet exists.
+
+    mass = np.array([[M + m, m * lc * np.cos(th)],
                      [m * lc * np.cos(th), I + m * lc**2]])
     rhs = np.array([F + m * lc * np.sin(th) * thd**2,
                     m * G * lc * np.sin(th)])
-    ours = np.linalg.solve(mass, rhs)
+    ours = np.linalg.solve(mass, rhs)  # [xddot, thddot]
 
+    # ============================================================
+    #  COMPARE
+    # ============================================================
     err = np.abs(sim - ours).max()
     worst = max(worst, err)
     print(f"  {th:6.3f} {F:7.2f} | {sim[1]:12.5f} {ours[1]:10.5f} {err:9.1e}")
