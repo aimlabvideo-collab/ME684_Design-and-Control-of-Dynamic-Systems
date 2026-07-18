@@ -151,6 +151,7 @@ def rk4_step(s, F, dt, dyn=nonlinear_dynamics):
 
     We need this because comparing our model against the simulator means
     integrating our model forward in time, not just evaluating accelerations.
+    link : https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
     """
     k1 = dyn(s, F)
     k2 = dyn(s + 0.5 * dt * k1, F)

@@ -150,13 +150,13 @@ plant amplifies the difference exponentially. Shrink `dt` and watch it vanish:
 
 ```
       dt |  max |A-B| deg
-  0.00417 |     0.19208
-  0.00100 |     0.04662
-  0.00025 |     0.01173
-  0.00006 |     0.00294
+  0.00417 |     0.55908
+  0.00100 |     0.13602
+  0.00025 |     0.03412
+  0.00006 |     0.00854
 ```
 
-Roughly proportional to `dt`, heading to zero. A numerical artifact, not a
+Quartering `dt` quarters the gap — heading to zero. A numerical artifact, not a
 modeling error — and a distinction worth keeping, because Lab 1e produces an
 error that looks just like this one in a table and behaves nothing like it.
 

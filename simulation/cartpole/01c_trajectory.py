@@ -29,19 +29,21 @@ from cartpole_env import CartPole, rk4_step, nonlinear_dynamics
 # --- free fall, both at once -------------------------------------------
 # Both are advanced inside ONE loop, so they always sit at the same time.
 #
-#   T  = 0.7 s   the pole is unstable, so past ~2 s it has swung right over
-#                and comparing angles stops meaning anything.
-#   dt = 1/2000  fine enough that RK4 error stays far below everything else.
+#   T  = 1 s     3 deg grows to about 75 deg in that time -- a big fall,
+#                but still short of going over. Past ~1.5 s the pole has
+#                swung right around and comparing angles stops meaning
+#                anything.
+#   dt = 1 ms    1000 steps. Same step size as 01b.
 
 print("free fall")
-T = 0.7
-dt = 1.0 / 2000.0
+T = 1.0
+dt = 1.0 / 1000.0
 n = int(T / dt)
 
 th0_deg = 3.0
 s0 = np.array([0.0, np.deg2rad(th0_deg), 0.0, 0.0])
 
-env = CartPole(gui=False, dt=dt)     # (A) the robot
+env = CartPole(gui=True, dt=dt)     # (A) the robot
 env.reset(s0)
 s = s0.copy()                        # (B) our model
 
