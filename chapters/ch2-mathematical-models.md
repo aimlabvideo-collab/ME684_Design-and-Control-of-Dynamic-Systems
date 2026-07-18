@@ -637,13 +637,6 @@ real rig can sense directly — then
 writing $$D_{\text{ft}}$$ for the feedthrough matrix to keep it distinct from the
 determinant $$D$$ above.
 
-**A reading of the answer.** Note that $$D > 0$$ and hence $$a_2 > 0$$, so with no
-input the pole obeys $$\ddot\theta \approx a_2\theta$$ — a positive feedback of
-angle onto angular acceleration. Lean the pole and it accelerates *further* over.
-The upright equilibrium is unstable, and no choice of coordinates hides that; it
-is a property of $$A$$ itself. Chapter 8 makes this precise through the
-eigenvalues of $$A$$ and then designs a state feedback that stabilizes it.
-
 > **Scope.** This section only puts a model *into* state-space form. Analyzing it
 > — eigenvalues and modes, controllability and observability, converting between
 > $$(A,B,C,D)$$ and a transfer function, and designing feedback — is the subject
