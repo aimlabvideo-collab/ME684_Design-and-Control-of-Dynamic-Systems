@@ -214,10 +214,14 @@ python 03_keyboard_balance.py
 |---|---|
 | **←** | push the cart left (`F < 0`) |
 | **→** | push the cart right (`F > 0`) |
-| **r** | reset |
-| **q** | quit and see the plots |
+| **r** | start over without waiting to fall |
+| **q** | stop and see the plots |
 
 > Click on the PyBullet window first, or it will not see your keys.
+
+Drop the pole and it asks `try again? [y/n]` **in the terminal**. The 3D window
+looks frozen while it waits — that is just the prompt blocking. Answer `n` and
+it stops and draws the plots for your last attempt.
 
 **On difficulty.** The unstable pole sits at +3.97 rad/s — a 0.25 s time
 constant — and human reaction time is about 0.2 s. In real time this is close to

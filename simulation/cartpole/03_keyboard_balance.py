@@ -5,8 +5,11 @@ Lab 2 showed that no input chosen in advance keeps the pole up. So stop
 choosing in advance: watch the pole and react.
 
     Left / Right arrow   push the cart
-    r                    start over
-    q                    quit and see the plots
+    r                    start over without waiting to fall
+    q                    stop and see the plots
+
+Drop the pole and it asks, in the terminal, whether you want another go.
+Answer n and it stops and shows you the plots.
 
 Then the question that matters:
 
@@ -48,7 +51,7 @@ from cartpole_env import CartPole
 # full speed you are always behind. Slowing the world down buys back the
 # margin. Try SPEED = 1.0 once you can hold it at 1/3.
 
-dt = 1.0 / 240.0                 # 240 simulation steps per second
+dt = 1.0 / 1000                 # 1000 simulation steps per second
 SPEED = 1.0 / 3.0                # 1.0 = real time. Start slow.
 FORCE = 10.0                     # newtons while an arrow key is held
 GIVE_UP = np.deg2rad(60.0)       # past 60 degrees, call it fallen
@@ -62,7 +65,6 @@ print("balance it!   left/right = push,   r = restart,   q = quit")
 env = CartPole(gui=True, dt=dt)
 env.reset([0.0, START, 0.0, 0.0])
 
-ts = []                          # time within the current attempt
 th_hist = []                     # the angle you were looking at
 F_hist = []                      # the force you applied
 
@@ -86,7 +88,6 @@ while True:
         F = -FORCE
 
     # ---- record what you did, then take the step ----
-    ts.append(t)
     th_hist.append(theta)
     F_hist.append(F)
 
@@ -101,12 +102,24 @@ while True:
     fallen = abs(theta) > GIVE_UP
     restart = ord("r") in keys and keys[ord("r")] & p.KEY_WAS_TRIGGERED
 
-    if fallen or restart:
+    if fallen:
         best = max(best, t)
-        label = "fell" if fallen else "restart"
-        print(f"  {label:8s} after {t:5.2f} s   (best {best:5.2f} s)")
+        print(f"  fell after {t:5.2f} s   (best {best:5.2f} s)")
+        # Answer in the TERMINAL, not the 3D window. The window will look
+        # frozen while it waits -- that is just this prompt blocking.
+        answer = input("  try again? [y/n] ").strip().lower()
+        if not answer.startswith("y"):
+            break
+
+    if fallen or restart:
         env.reset([0.0, START, 0.0, 0.0])
         t = 0.0
+        th_hist.clear()                  # plot the attempt you just made,
+        F_hist.clear()                   # not every attempt glued together
+        t_start = time.perf_counter()    # restart the clock too, and do it
+                                         # AFTER the prompt, or the pacing
+                                         # below counts the time you spent
+                                         # answering and stops waiting at all
 
     # ---- hold the viewer to SPEED x real time ----
     # A plain time.sleep(dt) cannot do this: Windows rounds a sleep up to
