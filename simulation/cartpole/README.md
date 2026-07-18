@@ -131,15 +131,15 @@ Our equations are not an approximation of the simulator's dynamics; they are
 the same equations.
 
 **01c** releases the pole and lets it fall, integrating our own model
-alongside the simulator. The two stay together at 3° and at 30° alike — the
-nonlinear model has made no approximation, so nothing degrades with angle.
+alongside the simulator, released from 3°. They stay together: our model made
+no approximation, so there is nothing in it to degrade. (Large angles are
+already covered by `01b`, which probes random states out to 0.4 rad.)
 
 `01c` shows these plots rather than saving them. Committed here as a
 reference of what you should see:
 
 <p align="center">
-  <img src="results/01_nonlinear_small.png" alt="Free fall from 3 degrees" width="520"><br>
-  <img src="results/01_nonlinear_large.png" alt="Free fall from 30 degrees" width="520">
+  <img src="results/01_nonlinear_small.png" alt="Free fall from 3 degrees" width="520">
 </p>
 
 **01c**, second half, is the subtle one. Over a trajectory, (A) and (B) do **not** agree to

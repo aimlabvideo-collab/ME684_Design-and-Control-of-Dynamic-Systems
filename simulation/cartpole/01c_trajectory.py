@@ -8,9 +8,13 @@ release the pole and run both forward together, step by step.
 A small gap opens up. The second half of this file shows that the gap is
 NOT a modeling error.
 
+We release from 3 degrees only. Large angles are already covered by 01b,
+which tests random states out to 0.4 rad -- and our model makes no
+approximation anyway, so nothing about it degrades as the angle grows.
+
     python 01c_trajectory.py
 
-Two plot windows open -- close each one to continue.
+A plot window opens -- close it to continue.
 Next: 01d_replay.py shows the motion in 3D.
 """
 
@@ -34,49 +38,49 @@ T = 0.7
 dt = 1.0 / 2000.0
 n = int(T / dt)
 
-for th0_deg in (3.0, 30.0):
-    s0 = np.array([0.0, np.deg2rad(th0_deg), 0.0, 0.0])
+th0_deg = 3.0
+s0 = np.array([0.0, np.deg2rad(th0_deg), 0.0, 0.0])
 
-    env = CartPole(gui=False, dt=dt)     # (A) the robot
-    env.reset(s0)
-    s = s0.copy()                        # (B) our model
+env = CartPole(gui=False, dt=dt)     # (A) the robot
+env.reset(s0)
+s = s0.copy()                        # (B) our model
 
-    ts = np.zeros(n)
-    a = np.zeros(n)                      # (A) angle history
-    b = np.zeros(n)                      # (B) angle history
+ts = np.zeros(n)
+a = np.zeros(n)                      # (A) angle history
+b = np.zeros(n)                      # (B) angle history
 
-    for k in range(n):
-        ts[k] = k * dt                   # record both right now
-        a[k] = env.get_state()[1]
-        b[k] = s[1]
+for k in range(n):
+    ts[k] = k * dt                   # record both right now
+    a[k] = env.get_state()[1]
+    b[k] = s[1]
 
-        env.apply_force(0.0)             # advance the robot, F = 0
-        env.step()
-        s = rk4_step(s, 0.0, dt, nonlinear_dynamics)   # advance our model
+    env.apply_force(0.0)             # advance the robot, F = 0
+    env.step()
+    s = rk4_step(s, 0.0, dt, nonlinear_dynamics)   # advance our model
 
-    env.close()
+env.close()
 
-    gap = np.abs(a - b).max()            # biggest angle difference, in rad
-    gap_deg = np.rad2deg(gap)
-    print(f"  theta0 = {th0_deg:4.1f} deg -> max |A-B| = {gap_deg:8.4f} deg")
+gap = np.abs(a - b).max()            # biggest angle difference, in rad
+gap_deg = np.rad2deg(gap)
+print(f"  theta0 = {th0_deg:4.1f} deg -> max |A-B| = {gap_deg:8.4f} deg")
 
-    fig, ax = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
-    ax[0].plot(ts, np.rad2deg(a), lw=3.5, alpha=0.35, label="(A) PyBullet")
-    ax[0].plot(ts, np.rad2deg(b), "--", lw=1.6, label="(B) our model")
-    ax[0].set_ylabel("theta [deg]")
-    ax[0].set_title(f"Free fall from {th0_deg} deg,  F = 0")
-    ax[0].legend(loc="upper left")
+fig, ax = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
+ax[0].plot(ts, np.rad2deg(a), lw=3.5, alpha=0.35, label="(A) PyBullet")
+ax[0].plot(ts, np.rad2deg(b), "--", lw=1.6, label="(B) our model")
+ax[0].set_ylabel("theta [deg]")
+ax[0].set_title(f"Free fall from {th0_deg} deg,  F = 0")
+ax[0].legend(loc="upper left")
 
-    ax[1].plot(ts, np.rad2deg(np.abs(a - b)), "--")
-    ax[1].set_yscale("log")
-    ax[1].set_ylabel("|A-B| [deg]")
-    ax[1].set_xlabel("time [s]")
+ax[1].plot(ts, np.rad2deg(np.abs(a - b)), "--")
+ax[1].set_yscale("log")
+ax[1].set_ylabel("|A-B| [deg]")
+ax[1].set_xlabel("time [s]")
 
-    for x in ax:
-        x.grid(alpha=0.3)
-    fig.tight_layout()
-    plt.show()                     # close the window to continue
-    plt.close(fig)
+for x in ax:
+    x.grid(alpha=0.3)
+fig.tight_layout()
+plt.show()                     # close the window to continue
+plt.close(fig)
 
 
 # --- so whose fault is the gap? ----------------------------------------
