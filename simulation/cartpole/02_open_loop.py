@@ -28,7 +28,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cartpole_env import CartPole, plot_run, simulate
+from cartpole_robot import CartPole, plot_run, simulate
 
 RESULTS = Path(__file__).parent / "results"
 

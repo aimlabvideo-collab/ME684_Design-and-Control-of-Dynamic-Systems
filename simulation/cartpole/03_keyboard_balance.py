@@ -42,7 +42,7 @@ import numpy as np                   # arrays and math
 import pybullet as p                 # only to read the keyboard
 import matplotlib.pyplot as plt      # the plots
 
-from cartpole_env import CartPole
+from cartpole_robot import CartPole
 
 
 # --- settings ----------------------------------------------------------

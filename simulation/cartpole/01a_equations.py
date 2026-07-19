@@ -16,7 +16,7 @@ Next: 01b_check.py asks whether these equations are actually right.
 import numpy as np                   # arrays, sin/cos, the matrix solve
 
 # Physical constants only. No simulator involved in this file.
-from cartpole_env import G, M_CART, M_POLE, LC, I_POLE
+from cartpole_model import G, M_CART, M_POLE, LC, I_POLE
 
 # Short names, so the formulas below look like the ones on the board.
 # Parameters are in SI units: kg, m, s.

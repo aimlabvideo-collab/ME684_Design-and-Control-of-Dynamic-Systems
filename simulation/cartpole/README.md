@@ -71,7 +71,8 @@ done. If the window never appears but there is no error, see
 ```
 ME 684/
 ├── README.md
-├── cartpole_env.py          shared: the model, the simulator wrapper, plotting
+├── cartpole_model.py        our equations. Imports no simulator at all
+├── cartpole_robot.py        the PyBullet wrapper we test them against
 ├── assets/cartpole.urdf     the robot description
 ├── 01a_equations.py         Lab 1a: type our equations in, solve at a point
 ├── 01b_check.py             Lab 1b: do they match the robot?
@@ -82,9 +83,17 @@ ME 684/
 └── results/                 plots from Labs 2-3, plus Lab 1 reference images
 ```
 
-Read `cartpole_env.py` first. Its docstring carries the full Lagrangian
-derivation, the sign conventions, and the linearization — everything that goes
-on the board.
+The two shared files are split along the line the whole chapter turns on:
+
+| file | contains | imports PyBullet? |
+|---|---|---|
+| `cartpole_model.py` | the constants, our equations of motion, and RK4 | **no** |
+| `cartpole_robot.py` | the `CartPole` wrapper, `simulate`, `plot_run` | yes |
+
+`cartpole_model.py` has never seen the simulator. That is what makes Lab 1b
+worth running: when the two agree to 10⁻¹⁴, it cannot be because one copied
+the other. The sign conventions and the derivation itself are in
+[Chapter 2](../../chapters/ch2-mathematical-models.md), §2.3.
 
 ### Why a custom URDF?
 
@@ -278,7 +287,7 @@ It is compiling. Give it 5–10 minutes.
 
 **My control input does nothing.**
 The single most common PyBullet mistake, and the reason `_setup_motors()` exists
-in `cartpole_env.py`. Right after `loadURDF`, every joint has a velocity motor
+in `cartpole_robot.py`. Right after `loadURDF`, every joint has a velocity motor
 enabled with `targetVelocity = 0` and a large max force. Unless you disable it,
 that motor silently cancels whatever torque you apply:
 
@@ -296,7 +305,7 @@ keys when its own window is focused.
 
 **My model disagrees with the simulator.**
 Two usual causes. (1) PyBullet applies `angularDamping = 0.04` by default and
-your equations have no such term — `cartpole_env.py` zeroes it via
+your equations have no such term — `cartpole_robot.py` zeroes it via
 `changeDynamics`. (2) The URDF inertias are placeholders; see §2.
 
 **Plots do not appear.**

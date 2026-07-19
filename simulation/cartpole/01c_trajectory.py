@@ -22,9 +22,10 @@ import time                          # to pace the viewer at a watchable speed
 import numpy as np                   # arrays and math
 import matplotlib.pyplot as plt      # the plots
 
-# rk4_step(s, F, dt, dyn) advances a model by one Runge-Kutta step.
 # nonlinear_dynamics(s, F) is the matrix solve from 01a, packaged up.
-from cartpole_env import CartPole, rk4_step, nonlinear_dynamics
+# rk4_step(s, F, dt, dyn) advances it by one Runge-Kutta step.
+from cartpole_model import rk4_step, nonlinear_dynamics
+from cartpole_robot import CartPole
 
 
 # --- free fall, both at once -------------------------------------------
