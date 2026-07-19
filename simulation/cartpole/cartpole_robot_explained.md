@@ -1,169 +1,83 @@
-# Understanding `cartpole_robot.py`
+# `cartpole_robot.py`, step by step
 
-*A walkthrough for students who have not written simulation code before.*
-
----
-
-## 1. Why there are two files, not one
-
-Chapter 2 has one question: **do the equations we derived on the board actually
-describe a physical cart-pole?**
-
-To answer it we need two independent things to compare. So the code is split
-along exactly that line:
-
-| file | what it is | imports PyBullet? |
-|---|---|---|
-| `cartpole_model.py` | the equations **we** derived | **no** |
-| `cartpole_robot.py` | a **robot** to test them against | yes |
-
-`cartpole_model.py` has never seen the simulator. That is not a stylistic
-choice — it is the whole argument. When the two agree to 14 decimal places in
-Lab 1b, it cannot be because one copied the other.
-
-This document is about the second file.
+*What each PyBullet call does, what you pass it, and why we call it.*
 
 ---
 
-## 2. What a physics engine is
+## The idea in one slide
 
-**PyBullet** is a *physics engine*: software that computes how objects move.
+`cartpole_model.py` holds **our equations**. It never imports PyBullet.
 
-The essential point, and the one students most often get backwards:
+`cartpole_robot.py` holds **the robot we test them against**. It is a thin
+wrapper around PyBullet, a *physics engine*.
 
-> You do **not** give PyBullet the equations of motion.
-> You describe the **bodies and joints**, and it derives the motion itself.
+> You do not give a physics engine the equations of motion.
+> You describe the **bodies and joints**, and it works out the motion itself.
 
-You tell it: here is a cart of mass 1 kg that slides horizontally; here is a
-pole of mass 0.1 kg hinged to it, free to rotate. From that description alone
-PyBullet works out — internally, using its own methods — how the system moves
-under gravity and applied forces.
+That is what makes it a fair test: when the two agree to 14 decimal places,
+neither can have copied the other.
 
-That independence is what makes it a fair test of our algebra.
-
-### Where the description lives
-
-The description is a file: `assets/cartpole.urdf`. **URDF** stands for Unified
-Robot Description Format. It is a text file listing:
-
-- **links** — the rigid bodies (the rail, the cart, the pole)
-- **joints** — how they connect, and how each is allowed to move
-- for every link: its **mass**, its **inertia**, its shape
-
-Each link carries three separate geometries, and they are not the same thing:
-
-| tag | used for |
-|---|---|
-| `<visual>` | drawing on screen |
-| `<collision>` | detecting contact between bodies |
-| `<inertial>` | the **dynamics** — mass and how it is distributed |
-
-Only `<inertial>` affects the motion. A body can look like a cylinder, collide
-like a box, and rotate like neither, if you write it carelessly.
-
-> **Why we ship our own URDF.** PyBullet includes a stock `cartpole.urdf`, but
-> every link in it has a placeholder inertia of 1.0 kg·m². The true value for
-> our pole is 0.00835 kg·m² — about **120× smaller**. With the stock file, the
-> equations you derive correctly on the board would not match the simulator,
-> and Lab 1 would "prove" your correct work wrong.
-
----
-
-## 3. The five things you can do
-
-The whole file exists to wrap PyBullet in five operations.
+The class wraps PyBullet in five operations:
 
 ```python
-env = CartPole(gui=True, dt=0.001)   # build it, open a window
-env.reset(s)                         # teleport it to a state
+env = CartPole(gui=True, dt=0.001)   # build the world
+env.reset(s)                         # teleport to a state
 env.apply_force(F)                   # push the cart
-env.step()                           # run the physics for dt seconds
-env.get_state()                      # read the state back out
+env.step()                           # let dt seconds pass
+env.get_state()                      # read the state back
 ```
 
-Every lab in this chapter is built out of only these. Learn these five and you
-can ignore the rest of the file.
-
-### `CartPole(gui=..., dt=...)`
-
-Creates the simulation.
-
-- `gui=True` opens a 3-D window. `gui=False` runs with no window, which is much
-  faster — use it when you only want numbers.
-- `dt` is the **time step**: how much simulated time one call to `step()`
-  advances. `dt = 0.001` means each step is one millisecond.
-
-### `env.reset(s)`
-
-Places the robot at the state `s = [x, θ, ẋ, θ̇]`.
-
-This is a **teleport, not a simulation**. It writes the numbers straight into
-the joints. No physics runs, no time passes. We use it to put the robot at
-exactly the state we want to ask a question about.
-
-### `env.apply_force(F)`
-
-Pushes the cart with `F` newtons. Positive `F` pushes to the right.
-
-Note what it does *not* do: there is no way to apply anything to the pole. The
-pole joint has no motor. One actuator, two degrees of freedom — the system is
-**underactuated**, and that is precisely why balancing it is a control problem.
-
-### `env.step()`
-
-Runs the physics engine forward by exactly `dt` seconds. This is the only call
-that makes time pass.
-
-### `env.get_state()`
-
-Reads `[x, θ, ẋ, θ̇]` back out of the joints.
-
-**PyBullet reports position and velocity only — never acceleration.** When
-Lab 1b needs an acceleration, it has to recover it from how much the velocity
-changed:
-
-```python
-a = (v_after - v_before) / dt
-```
+Every lab is built from these five and nothing else.
 
 ---
 
-## 4. The state vector
+## `__init__` — building the world
 
-Everything in this chapter passes the state around as one array of four
-numbers:
+Eight calls, in order.
 
-```
-s = [ x , theta , xdot , thetadot ]
-      0     1       2       3
-```
+### 1. `p.connect(p.GUI)` or `p.connect(p.DIRECT)`
 
-| | meaning | sign convention |
-|---|---|---|
-| `x` | cart position [m] | `+x` is to the right |
-| `theta` | pole angle from straight up [rad] | `+θ` leans right |
-| `xdot` | cart velocity [m/s] | |
-| `thetadot` | pole angular velocity [rad/s] | |
+- **Does** — starts a physics server and returns an id for it.
+- **Input** — `p.GUI` opens a 3-D window; `p.DIRECT` runs with no window.
+- **Why** — `DIRECT` is much faster. Use it whenever you only want numbers.
 
-`s = 0` is the upright equilibrium — and it is **unstable**.
+### 2. `p.setAdditionalSearchPath(pybullet_data.getDataPath())`
 
----
+- **Does** — tells PyBullet another folder to look in for model files.
+- **Input** — a folder path.
+- **Why** — so `loadURDF("plane.urdf")` finds the ground plane that ships
+  with PyBullet, without us typing a full path.
 
-## 5. Two settings that will silently ruin your day
+### 3. `p.setGravity(0, 0, -9.81)`
 
-These are the two lines in the file marked **GOTCHA**. Both cause failures that
-look like a mistake in your algebra when your algebra is fine. Both are worth a
-slide of their own.
+- **Does** — sets gravity for the whole world.
+- **Input** — the vector `(gx, gy, gz)` in m/s².
+- **Why** — `z` is up in our URDF, so gravity points along **−z**.
 
-### GOTCHA 1 — PyBullet adds damping you did not ask for
+### 4. `p.setTimeStep(dt)`
 
-Straight after loading a model, PyBullet applies its own damping to every body
-(`angularDamping = 0.04` by default). It is there to keep casual simulations
-stable.
+- **Does** — fixes how much simulated time one `stepSimulation()` advances.
+- **Input** — seconds. `0.001` is 1 ms.
+- **Why** — we need a known, fixed `dt` to compare against our own integrator.
 
-Our hand-derived equations contain **no friction term at all**. So unless we
-switch that damping off, the simulator is solving a *different problem* than
-the one we wrote down, and Lab 1b will never agree.
+### 5. `p.loadURDF(path, position, useFixedBase=True)`
+
+- **Does** — loads a model into the world and returns an integer id.
+- **Input** — the file, where to put it, and whether its base is bolted down.
+- **Why** — called twice: once for the ground, once for our cart-pole.
+  `useFixedBase=True` bolts the rail in place so only the cart and pole move.
+
+> **URDF** = Unified Robot Description Format. A text file listing the rigid
+> bodies (*links*), how they connect (*joints*), and each body's mass and
+> inertia. Each link has three geometries: `<visual>` for drawing,
+> `<collision>` for contact, `<inertial>` for the **dynamics**. Only the last
+> affects the motion.
+>
+> We ship our own URDF because PyBullet's stock cart-pole has a placeholder
+> inertia of 1.0 kg·m² — **120× too large**. With it, correct algebra would
+> not match the simulator.
+
+### 6. `p.changeDynamics(...)` — **GOTCHA 1**
 
 ```python
 for link in range(-1, p.getNumJoints(self.robot)):
@@ -171,113 +85,204 @@ for link in range(-1, p.getNumJoints(self.robot)):
                      angularDamping=0.0, jointDamping=0.0)
 ```
 
-**Consequence to point out in class:** with damping off, the system is
-*conservative*. Released from rest near upright, the pole swings down, through
-the bottom, up the far side to exactly the height it started from, and comes
-back — forever. It is a pendulum, not a fall. Energy is conserved to 6 decimal
-places over many swings.
+- **Does** — changes physical properties of one link.
+- **Input** — the robot id, the link index, and the properties to change.
+  Index `-1` is the base link, which is why the loop starts there.
+- **Why** — PyBullet applies its own damping by default (`angularDamping =
+  0.04`). **Our equations have no friction term at all.** Leave it on and the
+  simulator is solving a different problem than the one we wrote down.
 
-### GOTCHA 2 — every joint starts with a motor holding it still
+*Consequence worth showing:* with damping off the system is conservative.
+Released near upright it swings down, through the bottom, up the far side to
+the same height, and back — forever. Energy is constant to 14 decimal places.
+It is a pendulum, not a fall.
 
-This is the single most common PyBullet mistake.
+### 7. `self._release_joints()` — **GOTCHA 2**
 
-Right after `loadURDF`, **every joint already has a velocity motor enabled**,
-commanded to zero speed with a large maximum force. If you do not disable it,
-that motor quietly cancels whatever force you apply, and your control input
-appears to do nothing at all.
+See the next section. This is the single most common PyBullet mistake.
 
-The fix is to set that motor's force to zero, which releases the joint:
+---
+
+## `_release_joints` — switching off motors we never asked for
 
 ```python
 p.setJointMotorControl2(self.robot, CART_JOINT, p.VELOCITY_CONTROL, force=0)
 p.setJointMotorControl2(self.robot, POLE_JOINT, p.VELOCITY_CONTROL, force=0)
 ```
 
-Measured, with everything else identical:
+### `p.setJointMotorControl2(robot, joint, mode, force=...)`
 
-| | cart velocity after one step with `F = 50 N` |
+- **Does** — commands a joint's built-in motor. **Every joint in PyBullet has
+  one**, because the engine is built for robot arms.
+- **Input** — which robot, which joint (`0` = cart, `1` = pole), which mode,
+  and a force.
+- **Modes** — `POSITION_CONTROL` ("go to this angle"), `VELOCITY_CONTROL`
+  ("hold this speed"), `TORQUE_CONTROL` ("apply this force").
+
+**Why this line exists.** Straight after `loadURDF`, every joint already has a
+velocity motor running, told to hold zero speed with a large force. It
+silently cancels anything you apply, and your control input looks broken.
+
+**Why `force=0` turns it off.** In `VELOCITY_CONTROL`, `force` is not a
+command — it is the **maximum force the motor may spend**. Give it zero and it
+can do nothing. It is a dimmer, not a switch:
+
+| motor force budget | cart speed after one 50 N push |
 |---|---|
-| motor left on (default) | **0.000000 m/s** — the force did nothing |
-| motor released | 0.4878 m/s |
+| 0 N | 0.4878 m/s — fully released |
+| 5 N | 0.4390 m/s |
+| 20 N | 0.2927 m/s |
+| 1000 N (≈ default) | **0.0000 m/s** — our push does nothing |
 
-Note also that `reset()` calls this again. Resetting a joint re-enables its
-motor, so it has to be released every time.
+**Why `VELOCITY_CONTROL` and not something else.** Because the thing blocking
+us *is* a velocity motor, and switching modes does **not** remove it:
+
+| what we did first | then pushed with 50 N |
+|---|---|
+| nothing (PyBullet default) | **0.0000 m/s** |
+| `TORQUE_CONTROL, force=0` — "turn it off" | **0.0000 m/s** — still blocked |
+| `VELOCITY_CONTROL, force=0` | 0.4878 m/s ✓ |
+
+That last number is worth a second look: our own mass matrix predicts
+`xddot = 48.78 m/s²` for a 50 N push, so 0.01 s later the cart is doing
+0.4878 m/s. Release the joints properly and the simulator agrees with the
+algebra immediately.
+
+Row two is the trap. Students reach for `TORQUE_CONTROL`, assume the old mode
+is gone, and cannot see why nothing moves.
 
 ---
 
-## 6. A force lasts exactly one step
+## `reset` — teleporting
 
-Another behaviour that surprises people:
+```python
+p.resetJointState(self.robot, CART_JOINT, s[0], s[2])
+p.resetJointState(self.robot, POLE_JOINT, s[1], s[3])
+self._release_joints()
+```
 
-> An applied force is **cleared after every `step()`**. It must be re-applied
-> on every single step.
+### `p.resetJointState(robot, joint, position, velocity)`
 
-Measured, applying `F = 50 N` and then stepping four times:
+- **Does** — writes a position and velocity straight into a joint.
+- **Input** — which robot, which joint, the position, the velocity.
+- **Why** — this is a **teleport, not a simulation**. No physics runs and no
+  time passes. It puts the robot at exactly the state we want to ask about.
 
-| | `xdot` after each step |
+**Why `_release_joints()` again** — resetting a joint re-enables its motor. If
+you forget this, the robot locks up after the first reset.
+
+---
+
+## `get_state` — reading back
+
+```python
+x,  xd,  _, _ = p.getJointState(self.robot, CART_JOINT)
+th, thd, _, _ = p.getJointState(self.robot, POLE_JOINT)
+```
+
+### `p.getJointState(robot, joint)`
+
+- **Does** — reads one joint.
+- **Input** — which robot, which joint.
+- **Returns** — four values: position, velocity, reaction forces, applied
+  torque. We keep the first two and discard the rest.
+
+**Note there is no acceleration.** PyBullet never reports it. When Lab 1b
+needs one it has to be recovered:
+
+```python
+a = (v_after - v_before) / dt
+```
+
+State order everywhere in this chapter:
+
+```
+s = [ x , theta , xdot , thetadot ]      +x right,  +theta leans right
+```
+
+---
+
+## `apply_force` — pushing the cart
+
+```python
+F = float(np.clip(F, -self.force_limit, self.force_limit))
+p.setJointMotorControl2(self.robot, CART_JOINT, p.TORQUE_CONTROL, force=F)
+```
+
+- **Same function as above, different mode.** In `TORQUE_CONTROL`, `force` is
+  the **actual force applied**, not a budget. One keyword, two meanings.
+- **Why the cart only** — the pole joint gets nothing. It has no motor. One
+  actuator, two degrees of freedom: the system is **underactuated**, and that
+  is what makes balancing a control problem.
+- `np.clip` keeps the force within a limit, as a real actuator would be.
+
+> For a *sliding* joint, `TORQUE_CONTROL` applies a straight-line force, not a
+> torque. The name is misleading.
+
+**A force lasts exactly one step.** It is cleared after every `step()`:
+
+| | `xdot` over four steps of 50 N |
 |---|---|
-| `apply_force` called **once** | 0.4878, 0.4878, 0.4879, 0.4881 |
-| `apply_force` called **every step** | 0.4878, 0.9756, 1.4635, 1.9514 |
+| `apply_force` called once | 0.4878, 0.4878, 0.4879, 0.4881 — one kick, then coasting |
+| called every step | 0.4878, 0.9756, 1.4635, 1.9514 — steady acceleration |
 
-Called once, the cart gets a single kick and then coasts. Called every step, it
-accelerates steadily, as a constant force should.
+That is why `apply_force` sits **inside** every loop.
 
-This is why every loop in these labs looks like this, with `apply_force` inside
-the loop rather than before it:
+---
+
+## `step` and `close`
+
+### `p.stepSimulation()`
+
+- **Does** — runs the physics forward by exactly `dt`.
+- **Input** — none.
+- **Why** — the only call in the whole file that makes time pass.
+
+### `p.disconnect(cid)`
+
+- **Does** — shuts the physics server down and closes the window.
+- **Input** — the id from `connect`.
+
+---
+
+## The shape every lab has
 
 ```python
 for k in range(n):
     s = env.get_state()      # look at where it is
     F = ...                  # decide what to do
-    env.apply_force(F)       # push  <-- every single step
+    env.apply_force(F)       # push        <-- every step
     env.step()               # let time pass
 ```
 
-That four-line shape *is* the labs. In Lab 1c the force is fixed at zero; in
-Lab 3 it comes from your arrow keys; in Chapter 3 it will come from a
-controller. Nothing else changes.
+Only the middle line ever changes:
+
+| | how `F` is chosen |
+|---|---|
+| Lab 1c | `F = 0` |
+| Lab 3 | your arrow keys |
+| Chapter 3 | a controller |
 
 ---
 
-## 7. Two helpers built on top
+## Every PyBullet call in the file
 
-`simulate(env, input_fn, T, s0)` runs that loop for you for `T` seconds, given
-a function that chooses the force. `plot_run(...)` draws cart, pole and input
-against time. Lab 2 uses both; the other labs write their own loop so the shape
-above stays visible.
+| call | what it does |
+|---|---|
+| `connect` / `disconnect` | start / stop the physics server |
+| `setAdditionalSearchPath` | where to look for model files |
+| `setGravity`, `setTimeStep` | world settings |
+| `loadURDF` | put a body into the world |
+| `changeDynamics` | edit a link's physical properties (**damping off**) |
+| `setJointMotorControl2` | command a joint motor (**release**, and **push**) |
+| `resetJointState` | teleport a joint |
+| `getJointState` | read a joint |
+| `stepSimulation` | advance time by `dt` |
 
-### Real-time playback
+## Three things to remember
 
-To watch a simulation at a sensible speed you have to make the program wait.
-The obvious way is wrong:
-
-```python
-time.sleep(dt)          # DON'T
-```
-
-On Windows, `sleep` is rounded up to roughly 12 ms. With `dt = 1 ms` that runs
-the viewer about **12× too slow**, not at real speed. Instead, check the wall
-clock and wait only for however long you are actually ahead:
-
-```python
-ahead = (k + 1) * dt - (time.perf_counter() - t_start)
-if ahead > 0:
-    time.sleep(ahead)
-```
-
-Measured over 2 s of simulated time at `dt = 1 ms`: `sleep(dt)` gives 25.4 s
-(0.08× real time); the wall-clock version gives 2.01 s (1.00×).
-
----
-
-## 8. Summary
-
-- PyBullet derives the motion from a **description of bodies and joints**, not
-  from our equations. That is what makes it an independent check.
-- `cartpole_robot.py` wraps it in five calls: **construct, reset, apply_force,
-  step, get_state**.
-- `reset` is a teleport. `step` is the only thing that makes time pass.
-- Turn PyBullet's **default damping off**, or it is solving a different
-  problem than you wrote down.
-- **Release the joint motors**, or your force does nothing.
-- **Re-apply the force every step**, or it lasts 1 ms.
+1. **Turn the default damping off**, or the simulator solves a different
+   problem than you wrote down.
+2. **Release the joint motors**, or your force does nothing — and switching to
+   `TORQUE_CONTROL` does *not* release them.
+3. **Re-apply the force every step**, or it lasts one millisecond.
