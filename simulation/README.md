@@ -112,16 +112,23 @@ python -c "import pybullet as p, time; p.connect(p.GUI); time.sleep(2); p.discon
 If the window appears and closes cleanly, **you are done.** If not, see
 [Troubleshooting](#troubleshooting).
 
-### Step 5 — Run the cart-pole example
+### Step 5 — Run an example
 
 ```bash
-cd cartpole
-python 01_modeling.py
+cd manipulator
+python sim.py
 ```
 
-The cart-pole lab runs in three stages — `01_modeling.py`, `02_open_loop.py`,
-`03_keyboard_balance.py`. See [`cartpole/README.md`](cartpole/) for what each
-one does, the expected output, and the questions to answer as you go.
+Both labs are three short scripts each, run in order and from their own
+folder:
+
+| | |
+|---|---|
+| [`manipulator/`](manipulator/) | `test.py` → `sim.py` → `sim_control.py` |
+| [`cartpole/`](cartpole/) | `test.py` → `model_test.py` → `cart_pole_sim_control.py` |
+
+Each folder's README says what the scripts do, the expected output, and
+the questions to answer as you go.
 
 ---
 
