@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="one_link_arm">
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.2 0.2 0.1"/></geometry>
+    </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 0.25"/>
+      <geometry><box size="0.05 0.05 0.5"/></geometry>
+    </visual>
+    <inertial>
+      <!-- The centre of mass of the bar is at its middle, 0.25 m out from
+           the hinge. Without this line PyBullet puts all 1 kg on the
+           rotation axis, where gravity has no lever arm, and the arm will
+           not fall. -->
+      <origin xyz="0 0 0.25"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.02" iyy="0.02" izz="0.001"
+               ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child  link="link1"/>
+    <origin xyz="0 0 0.05"/>
+    <axis   xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57"
+           effort="10.0" velocity="2.0"/>
+  </joint>
+
+</robot>

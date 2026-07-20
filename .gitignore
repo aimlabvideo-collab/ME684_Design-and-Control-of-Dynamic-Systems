@@ -12,6 +12,10 @@ Textbook/
 Text Book/
 Text Book.zip
 
+# Ch 1 assignment solution — kept local, students build these themselves
+simulation/manipulator/two_link_arm.urdf
+simulation/manipulator/sim_two_link.py
+
 # Exam / quiz / solution materials (word-boundary patterns, not bare substrings)
 *answer-key*
 *answer_key*

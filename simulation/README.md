@@ -4,6 +4,7 @@ Control simulations used in lecture, written in **Python**.
 
 | Folder | Topic |
 |--------|-------|
+| [`manipulator/`](manipulator/) | One-link revolute arm — writing a URDF, loading it, and commanding a joint (Ch 1) |
 | [`cartpole/`](cartpole/) | Cart-pole modeling lab in PyBullet — derive the equations of motion, test open-loop inputs, then balance it by hand (Ch 2) |
 
 Each folder has its own README with details and how to run it.
