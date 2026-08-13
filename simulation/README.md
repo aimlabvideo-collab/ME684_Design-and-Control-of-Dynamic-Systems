@@ -58,9 +58,18 @@ python --version
 ```
 
 - If it prints `Python 3.8`–`3.11`, you are good.
-- If the command is not found, install Python from
-  [python.org/downloads](https://www.python.org/downloads/). **On Windows, tick
-  "Add Python to PATH"** in the installer.
+- If the command is not found, or the version is not in that range, install
+  **Python 3.11.9** — the recommended version for this course — from
+  [python.org/downloads/release/python-3119/](https://www.python.org/downloads/release/python-3119/).
+  Scroll to the bottom of that page, under **Files**, and pick:
+  - **Windows** → `Windows installer (64-bit)`
+  - **macOS** → `macOS 64-bit universal2 installer`
+  - **Linux** → use your package manager instead (e.g. `sudo apt install python3.11`)
+
+  **On Windows, tick "Add python.exe to PATH"** on the first installer screen
+  before clicking *Install Now*.
+  *(The generic [python.org/downloads](https://www.python.org/downloads/) page
+  always offers the newest release, which is 3.12+ — do not use it.)*
 - **Avoid Python 3.12+ for now.** PyBullet's installer still uses `distutils`,
   which was removed from the standard library in 3.12, so the build there tends
   to fail.
