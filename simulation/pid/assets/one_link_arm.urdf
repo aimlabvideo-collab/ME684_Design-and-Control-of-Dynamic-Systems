@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+  ME 684 - Chapter 3: the one-link arm the PID slides design against.
+
+  The numbers are chosen to match the plant on the slides:
+
+      J   = 0.5  kg m^2   inertia about the joint axis
+      mgl = 5    N m      gravity torque with the arm held horizontal
+      (b  = 0.2  N m s/rad friction, applied in the scripts, not here)
+
+  How the inertia works out. The joint sees I_joint = I_com + m d^2, where
+  d is the distance from the hinge to the centre of mass. With
+
+      m = 1.0 kg,   d = 0.5097 m,   I_com (about y) = 0.2402
+
+  that is  0.2402 + 1.0 * 0.5097^2 = 0.500  exactly. And the gravity torque
+  at horizontal is  m g d = 1.0 * 9.81 * 0.5097 = 5.0 N m.
+
+  test.py loads this with gravity ON and lets it swing. The three control
+  scripts load it with gravity OFF and inject a CONSTANT 5 N m disturbance
+  instead. That is the modelling choice the slides make: treat gravity as
+  a constant load T_d rather than the true m g l cos(theta).
+-->
+<robot name="one_link_arm">
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.15 0.15 0.1"/></geometry>
+      <material name="dark"><color rgba="0.1 0.16 0.25 1"/></material>
+    </visual>
+    <inertial>
+      <mass value="0"/>
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
+    </inertial>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 0.5097"/>
+      <geometry><box size="0.04 0.04 1.0194"/></geometry>
+      <material name="blue"><color rgba="0.09 0.42 0.75 1"/></material>
+    </visual>
+    <inertial>
+      <!-- centre of mass 0.5097 m out from the hinge -->
+      <origin xyz="0 0 0.5097"/>
+      <mass value="1.0"/>
+      <!-- I_com about the rotation axis (y) is set so I_joint = 0.5 -->
+      <inertia ixx="0.2402" ixy="0" ixz="0"
+               iyy="0.2402" iyz="0"
+               izz="0.0002"/>
+    </inertial>
+  </link>
+
+  <joint name="joint1" type="continuous">
+    <parent link="base_link"/>
+    <child  link="link1"/>
+    <origin xyz="0 0 0.05"/>
+    <axis   xyz="0 1 0"/>
+  </joint>
+
+</robot>
