@@ -5,6 +5,16 @@ import math
 import time
 
 p.connect(p.GUI)
+
+# Same camera as sim.py: on the y axis, looking straight at the x-z plane
+# the arm swings in. See sim.py for what each number does.
+p.resetDebugVisualizerCamera(
+    cameraDistance=2,
+    cameraYaw=180,
+    cameraPitch=0,
+    cameraTargetPosition=[0, 0, 0.3])
+p.configureDebugVisualizer(p.COV_ENABLE_GUI, 1)
+
 p.setGravity(0, 0, -9.81)
 
 robot = p.loadURDF("one_link_arm.urdf", useFixedBase=True)

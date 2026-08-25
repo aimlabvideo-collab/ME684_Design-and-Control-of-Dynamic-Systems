@@ -24,6 +24,61 @@ python sim_control.py
 Install instructions are in [`../README.md`](../README.md). Press `Ctrl-C`
 in the terminal to stop a script.
 
+## The camera
+
+PyBullet's default camera is 5 m back, aimed at the floor and turned 50°
+off to one side, which leaves our 0.5 m arm as a small slanted sliver.
+Both scripts set it explicitly instead:
+
+```python
+p.resetDebugVisualizerCamera(
+    cameraDistance=2,
+    cameraYaw=180,
+    cameraPitch=0,
+    cameraTargetPosition=[0, 0, 0.3])
+```
+
+`joint1` turns about the **y** axis, so the arm swings in the x–z plane.
+Putting the camera on the y axis (`cameraYaw` of 0 or 180) looks straight
+at that plane, so the whole swing is side-on and the angle you see on
+screen is the angle the script prints. `cameraPitch=0` keeps the view
+level with the arm, and `cameraTargetPosition` aims at the middle of the
+arm rather than at the floor.
+
+In the window you can still drag with the mouse to look around: **Ctrl +
+left-drag** (or ⌘ + left-drag) rotates, **Ctrl + middle-drag** pans,
+**scroll** zooms. If you build the two-link arm and it grows past the
+edge of the window, raise `cameraDistance`.
+
+### The world axes
+
+The red/green/blue lines at the origin are **x, y, z**. Green (y) points
+into the screen — that is the axis `joint1` turns about, which is why the
+arm swings in the plane facing you.
+
+Those axes are drawn by PyBullet's debug overlay, and one flag controls
+the whole overlay at once:
+
+```python
+p.configureDebugVisualizer(p.COV_ENABLE_GUI, 1)   # 0 hides it
+```
+
+Passing `0` gives a clean window for a screen recording — but it takes the
+world axes and the side panel with it, not just the camera preview panes.
+Both scripts leave it at `1` so you can see the axes while you work. If
+you do want the clean window *and* the axes, draw your own:
+
+```python
+for direction, colour, name in (([0.3, 0, 0], [1, 0, 0], "x"),
+                                ([0, 0.3, 0], [0, 1, 0], "y"),
+                                ([0, 0, 0.3], [0, 0, 1], "z")):
+    p.addUserDebugLine([0, 0, 0], direction, colour, 3)
+    p.addUserDebugText(name, direction, colour)
+```
+
+`addUserDebugLine` and `addUserDebugText` keep drawing with the overlay
+off — only PyBullet's own panels go away.
+
 ## Two things the slides get wrong
 
 Both make the arm sit motionless instead of falling, and neither prints
