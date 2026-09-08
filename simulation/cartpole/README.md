@@ -1,17 +1,21 @@
 # Chapter 2 — Mathematical Modeling
 
-A cart-pole in PyBullet, in three scripts.
+A cart-pole in PyBullet, in five scripts.
 
-By the end you will have (1) seen the pole fall, (2) proved that the
-equations you derived on the board are *the same equations* the physics
-engine is solving, and (3) balanced it yourself with the arrow keys — and
-then seen, in your own keypress data, that what your fingers were doing
-has a name: **feedback on the error**.
+By the end you will have (1) seen the pole fall, (2) typed in the
+equations you derived on the board and integrated them, (3) watched the
+physics engine trace the same motion and then proved it is solving *the
+same equations*, and (4) balanced
+it yourself with the arrow keys — and then seen, in your own keypress
+data, that what your fingers were doing has a name: **feedback on the
+error**.
 
 That last step is the entry point to Chapter 3.
 
 ```
 test.py                    load the cart-pole, let the pole fall over
+model_equations.py         our equations, solved at one instant, then integrated
+model_simul.py             the same motion, from PyBullet instead
 model_test.py              our equations vs PyBullet, to 14 decimal places
 cart_pole_sim_control.py   you balance it with the arrow keys
 assets/cartpole.urdf       the robot description
@@ -23,6 +27,8 @@ path:
 ```bash
 cd simulation/cartpole
 python test.py
+python model_equations.py
+python model_simul.py
 python model_test.py
 python cart_pole_sim_control.py
 ```
@@ -54,7 +60,76 @@ it. That coupling — the pole's fall drives the cart, the cart's motion
 drives the pole — is the whole reason this is a two-degree-of-freedom
 problem with only one actuator. **Underactuated** is the word.
 
-## 2. `model_test.py`
+## 2. `model_equations.py`
+
+The equations from the board, typed in — then used two ways.
+
+**Part 1 — one instant.**
+
+```
+[ M+m           m·lc·cos θ ] [ ẍ ]   [ F + m·lc·sin θ·θ̇² ]
+[ m·lc·cos θ    I + m·lc²  ] [ θ̈ ] = [ m·g·lc·sin θ       ]
+```
+
+Two equations, two unknowns. Pin the state (lean 0.2 rad, at rest, no
+push) and let `np.linalg.solve` do the algebra. That is linear algebra,
+not a differential-equation solver: no time passes, and the answer is the
+acceleration *right now*. `θ̈` comes out positive — leaning right, it
+accelerates further right. It falls. That is the unstable equilibrium in
+one number.
+
+**Part 2 — integrate through time.** Acceleration is the rate of change
+of velocity; velocity is the rate of change of position. So over a small
+step `dt`:
+
+```
+velocity += acceleration * dt
+position += velocity * dt
+```
+
+Repeat, and the state walks forward in time. That is numerical
+integration (Euler's method, the simplest kind). The script runs it for
+0.9 s from the same 0.2 rad lean and plots `θ(t)` and `x(t)`:
+
+<p align="center">
+  <img src="results/model_equations.png" alt="pole angle and cart position, integrated" width="520">
+</p>
+
+The pole passes 60° at about 0.6 s. Watch the cart too: nothing pushed
+it, yet it moves — the falling pole drags it through the off-diagonal
+terms of the mass matrix.
+
+Try `dt = 1/100`, then `1/10`. Euler drifts as the step grows: the answer
+starts to depend on `dt`, which a correct physics never does.
+
+A curve is not a check, though. These equations would draw something just
+as plausible with a sign wrong somewhere. The next two scripts are the
+check.
+
+## 3. `model_simul.py`
+
+The twin of Part 2 above, with one swap: instead of our loop solving the
+matrix and adding `acceleration * dt`, `p.stepSimulation()` does that
+inside PyBullet, and we only read the state back. Same 0.2 rad lean, same
+`F = 0`, same 0.9 s.
+
+<p align="center">
+  <img src="results/model_simul.png" alt="PyBullet: pole angle and cart position" width="520">
+</p>
+
+Put the two plots side by side. Same shape, same 0.60 s crossing of 60°,
+same cart recoil. PyBullet has never seen our matrix — you handed it
+bodies and joints and it worked out the motion itself — so the agreement
+is not because one copied the other.
+
+They are not identical to every decimal, though. PyBullet integrates one
+way and `model_equations.py` another (Euler), and that integration error
+shrinks as you refine `dt` in both. Now comment out the `changeDynamics`
+loop that zeroes PyBullet's default damping: the curves diverge, and no
+amount of shrinking `dt` brings them back. That is a *different model*,
+not a numerical error. Telling those two apart cleanly is the next script.
+
+## 4. `model_test.py`
 
 The one that matters. Two answerers, same question:
 
@@ -83,7 +158,7 @@ the numerical integration adds errors of its own, and a mismatch would
 not tell you whether the equations or the integrator was at fault. One
 instant leaves the equations nowhere to hide.
 
-## 3. `cart_pole_sim_control.py`
+## 5. `cart_pole_sim_control.py`
 
 | key | |
 |---|---|
@@ -144,7 +219,7 @@ That is where Chapter 3 begins.
 
 ## The two gotchas
 
-Both appear in all three scripts, and both are silent when you get them
+Both appear in every script that loads the robot, and both are silent when you get them
 wrong.
 
 **1. PyBullet's default damping.** Every body gets `angularDamping = 0.04`

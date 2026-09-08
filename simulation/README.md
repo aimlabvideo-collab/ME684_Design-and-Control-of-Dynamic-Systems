@@ -482,7 +482,7 @@ Each lab is a short sequence of scripts, run in order:
 | Lab | Run in this order |
 |---|---|
 | [`manipulator/`](manipulator/) | `test.py` → `sim.py` → `sim_control.py` |
-| [`cartpole/`](cartpole/) | `test.py` → `model_test.py` → `cart_pole_sim_control.py` |
+| [`cartpole/`](cartpole/) | `test.py` → `model_equations.py` → `model_simul.py` → `model_test.py` → `cart_pole_sim_control.py` |
 | [`pid/`](pid/) | `test.py` → `step1_p.py` → `step2_pi.py` → `step3_pid.py` |
 
 Each folder's README says what the scripts do, the expected output, and the
