@@ -56,16 +56,20 @@ robot = p.loadURDF("assets/cartpole.urdf", [0, 0, BASE_Z], useFixedBase=True)
 
 # GOTCHA 1: PyBullet adds its own damping to every body by default. Our
 # equations have no friction term, so switch it off or the two disagree.
+# if we don't do this, the pole falls slower than our equations predict since pyBullet has their own default damping.
 for link in range(-1, p.getNumJoints(robot)):
     p.changeDynamics(robot, link, linearDamping=0, angularDamping=0,
                      jointDamping=0)
 
 # Same start as model_equations.py: lean 0.2 rad, everything else zero.
+# Overwriting the joint state with command values.
 p.resetJointState(robot, CART_JOINT, 0.0, 0.0)
 p.resetJointState(robot, POLE_JOINT, 0.2, 0.0)
 
 # GOTCHA 2: after loadURDF (and again after every resetJointState) each joint
 # has a velocity motor holding it still. Release both, or nothing moves.
+# We don't need to do this if we move joints in position control.
+# But if we want to apply force or torque through a torque control mode, we must release the default velocity motors.
 p.setJointMotorControl2(robot, CART_JOINT, p.VELOCITY_CONTROL, force=0)
 p.setJointMotorControl2(robot, POLE_JOINT, p.VELOCITY_CONTROL, force=0)
 
@@ -90,7 +94,7 @@ for step in range(int(T / DT)):
     p.setJointMotorControl2(robot, CART_JOINT, p.TORQUE_CONTROL, force=F)
 
     p.stepSimulation()                        # advance by exactly DT
-
+    # output of getJointState is (position, velocity, reaction forces, applied torque)
     x, xdot, _, _ = p.getJointState(robot, CART_JOINT)
     theta, thetadot, _, _ = p.getJointState(robot, POLE_JOINT)
 
