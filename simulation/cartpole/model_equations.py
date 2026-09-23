@@ -106,7 +106,7 @@ xs = [s[0]]
 thetas = [s[1]]
 
 for step in range(int(T / dt)):
-
+    # s = [p, th, pdot, thdot]
     # ---- 1. acceleration at THIS state (Part 1, again) ----
     th, thd = s[1], s[3]
 
