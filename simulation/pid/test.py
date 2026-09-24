@@ -37,7 +37,7 @@ p.loadURDF("plane.urdf", [0, 0, -1.0])
 robot = p.loadURDF("assets/one_link_arm.urdf", [0, 0, 0.5],
                    useFixedBase=True, flags=p.URDF_USE_INERTIA_FROM_FILE)
 
-p.resetDebugVisualizerCamera(cameraDistance=2.5, cameraYaw=90, cameraPitch=-10,
+p.resetDebugVisualizerCamera(cameraDistance=2.5, cameraYaw=0, cameraPitch=-10,
                              cameraTargetPosition=[0, 0, 0.5])
 
 # Release the default velocity motor (see the note in step1_p.py); without
