@@ -59,9 +59,9 @@ isObservable2 = rank(OM2) == size(A, 1)
 % Dimension of K is n by m (m: # of state, n: # of input)
 % Example has m=2, n=1 so K = [k1 k2];
 % Derive the formula by hand det(sI-(A-BK))=0
-% s^2 + (0.4+k2)s + k1 = s^2 +7.2s + 36 = 0
+% s^2 + (0.4+2*k2)s + 2*k1 = s^2 +7.2s + 36 = 0
 % by this we can identify k1 and k2
-K = [36 6.8];
+K = [18 3.4];
 % Then your input be u = -K*x
 
 % Matlab also have a function to find this K matrix by
